@@ -192,6 +192,13 @@
                 </div>
                 <div class="p-4 space-y-4">
                     <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Proximity Verification</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span class="text-sm">Server-side Protected</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-600">Private Key</span>
                         <div class="flex items-center space-x-2">
                             <div id="private-key-indicator" class="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -544,37 +551,50 @@
                 // Start polling for data
                 receiverInterval = setInterval(async () => {
                     try {
-                        // Fetch key pair
-                        const keyPairData = await apiRequest('GET', `/api/keys/${senderId}`);
+                        // Update receiver location (in case user moves)
+                        receiverLocation = await getCurrentPosition();
                         
-                        if (keyPairData) {
-                            document.getElementById('private-key-indicator').className = 'w-2 h-2 bg-green-500 rounded-full';
-                            document.getElementById('private-key-status').textContent = 'Loaded';
+                        // Verify proximity and get location data
+                        const verificationResult = await apiRequest('POST', '/api/location/verify', {
+                            senderId,
+                            receiverLocation
+                        });
+                        
+                        if (verificationResult) {
+                            document.getElementById('last-sync').textContent = new Date().toLocaleTimeString();
                             
-                            // Fetch location data
-                            const locationData = await apiRequest('GET', `/api/location/${senderId}`);
+                            // Update distance display
+                            updateDistanceDisplay(verificationResult.distance, verificationResult.isWithinRange);
                             
-                            if (locationData) {
-                                document.getElementById('last-sync').textContent = 
-                                    new Date(locationData.timestamp).toLocaleTimeString();
+                            if (verificationResult.isWithinRange) {
+                                // Only decrypt and show location if within range
+                                document.getElementById('private-key-indicator').className = 'w-2 h-2 bg-green-500 rounded-full';
+                                document.getElementById('private-key-status').textContent = 'Loaded';
                                 
                                 // Decrypt location
-                                const decryptedData = crypto.decrypt(locationData.encryptedLocation, keyPairData.privateKey);
+                                const decryptedData = crypto.decrypt(verificationResult.locationData.encryptedLocation, verificationResult.keyPair.privateKey);
                                 const coordinates = JSON.parse(decryptedData);
                                 
                                 senderLocation = coordinates;
                                 
-                                // Calculate distance
-                                const distance = calculateDistance(receiverLocation, coordinates);
-                                const isWithinRange = distance <= 1.0;
+                                // Update map view
+                                updateMapView(true);
+                            } else {
+                                // Clear location data if outside range
+                                senderLocation = null;
+                                document.getElementById('private-key-indicator').className = 'w-2 h-2 bg-gray-400 rounded-full';
+                                document.getElementById('private-key-status').textContent = 'Access Denied';
                                 
-                                // Update UI
-                                updateDistanceDisplay(distance, isWithinRange);
-                                updateMapView(isWithinRange);
+                                // Update map view
+                                updateMapView(false);
                             }
                         }
                     } catch (error) {
                         console.error('Error in receiver polling:', error);
+                        // Show error state
+                        document.getElementById('private-key-indicator').className = 'w-2 h-2 bg-red-500 rounded-full';
+                        document.getElementById('private-key-status').textContent = 'Error';
+                        updateMapView(false);
                     }
                 }, 2000);
                 
@@ -741,6 +761,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Auto-generate keys on startup
             generateKeys();
+            // Show proximity verification info
+            showNotification('Enhanced proximity verification active - location data only shared when users are within 1km of each other', 'info');
         });
     </script>
 </body>
