@@ -3,14 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProximityTracker</title>
+    <title>TrackSmart - Universal Logistics Visibility Platform</title>
+    <meta name="description" content="BECKN protocol-based unified logistics tracking platform for real-time visibility across multiple carriers and transport modes in India">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
-    <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
-    <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
-    <script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
-    <script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'beckn-blue': '#1E40AF',
+                        'beckn-green': '#059669',
+                        'beckn-orange': '#EA580C',
+                        'indian-saffron': '#FF9933',
+                        'indian-green': '#138808',
+                        'indian-navy': '#000080'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         .pulse-animation {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -19,186 +30,925 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        .tracking-timeline {
+            position: relative;
+        }
+        .tracking-timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 20px;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 12px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #e5e7eb;
+            background: white;
+        }
+        .timeline-dot.active {
+            background: #059669;
+            border-color: #059669;
+        }
+        .timeline-dot.completed {
+            background: #10b981;
+            border-color: #10b981;
+        }
+        .carrier-card {
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .carrier-card:hover {
+            border-color: #1E40AF;
+            transform: translateY(-2px);
+        }
+        .carrier-card.selected {
+            border-color: #1E40AF;
+            background: #eff6ff;
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="max-w-md mx-auto bg-white min-h-screen">
-        <!-- Header -->
-        <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 text-center">
-            <h1 class="text-2xl font-bold">ProximityTracker</h1>
-            <p class="text-blue-100 mt-2">Secure Location Sharing</p>
-        </header>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indian-saffron to-indian-green text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-xl font-bold">TrackSmart</h1>
+                        <p class="text-sm text-orange-100">Universal Logistics Visibility Platform</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm bg-white/20 px-3 py-1 rounded-full">BECKN Protocol</span>
+                    <button id="api-docs-btn" class="text-sm hover:text-orange-200 transition-colors">API Docs</button>
+                </div>
+            </div>
+        </div>
+    </header>
 
-        <!-- Mode Toggle -->
-        <div class="p-4 bg-gray-50 border-b">
-            <div class="flex rounded-lg bg-gray-200 p-1">
-                <button id="sender-mode" class="flex-1 py-2 px-4 text-sm font-medium rounded-md bg-blue-600 text-white transition-colors">
-                    Sender Mode
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8">
+                <button id="nav-track" class="nav-btn active py-4 px-2 text-sm font-medium border-b-2 border-beckn-blue text-beckn-blue">
+                    Track Shipments
                 </button>
-                <button id="receiver-mode" class="flex-1 py-2 px-4 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors">
-                    Receiver Mode
+                <button id="nav-carriers" class="nav-btn py-4 px-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Carrier Network
+                </button>
+                <button id="nav-analytics" class="nav-btn py-4 px-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Analytics
+                </button>
+                <button id="nav-integration" class="nav-btn py-4 px-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    API Integration
                 </button>
             </div>
         </div>
+    </nav>
 
-        <!-- Main Content -->
-        <main class="p-4">
-            <!-- Sender Interface -->
-            <div id="sender-interface" class="space-y-4">
-                <div class="bg-white rounded-lg shadow p-4">
-                    <h2 class="text-lg font-semibold mb-4">Share Your Location</h2>
-                    
-                    <!-- Key Generation -->
-                    <div class="mb-4">
-                        <button id="generate-keys" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                            Generate Security Keys
-                        </button>
-                        <p class="text-sm text-gray-600 mt-2">Generate RSA keys for secure location sharing</p>
-                    </div>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Track Shipments Section -->
+        <div id="track-section" class="page-section">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Search Panel -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Track Your Shipments</h2>
+                        
+                        <!-- Search Input -->
+                        <div class="mb-6">
+                            <div class="relative">
+                                <input type="text" id="tracking-input" 
+                                       placeholder="Enter tracking number, AWB, or order ID"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-beckn-blue focus:border-beckn-blue text-lg">
+                                <button id="track-btn" class="absolute right-2 top-2 bg-beckn-blue text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                    Track
+                                </button>
+                            </div>
+                        </div>
 
-                    <!-- Sender ID Display -->
-                    <div id="sender-id-display" class="hidden bg-blue-50 p-3 rounded-lg mb-4">
-                        <p class="text-sm text-gray-700">Your Sender ID:</p>
-                        <p id="sender-id" class="font-mono text-lg font-bold text-blue-600"></p>
-                        <p class="text-xs text-gray-500 mt-1">Share this ID with the receiver</p>
-                    </div>
+                        <!-- Quick Actions -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <button class="quick-track-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-carrier="bluedart">
+                                <div class="text-center">
+                                    <div class="w-8 h-8 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                        <span class="text-white text-xs font-bold">BD</span>
+                                    </div>
+                                    <span class="text-sm text-gray-700">Blue Dart</span>
+                                </div>
+                            </button>
+                            <button class="quick-track-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-carrier="dtdc">
+                                <div class="text-center">
+                                    <div class="w-8 h-8 bg-red-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                        <span class="text-white text-xs font-bold">DT</span>
+                                    </div>
+                                    <span class="text-sm text-gray-700">DTDC</span>
+                                </div>
+                            </button>
+                            <button class="quick-track-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-carrier="delhivery">
+                                <div class="text-center">
+                                    <div class="w-8 h-8 bg-green-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                        <span class="text-white text-xs font-bold">DL</span>
+                                    </div>
+                                    <span class="text-sm text-gray-700">Delhivery</span>
+                                </div>
+                            </button>
+                            <button class="quick-track-btn p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" data-carrier="ecom">
+                                <div class="text-center">
+                                    <div class="w-8 h-8 bg-purple-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                        <span class="text-white text-xs font-bold">EC</span>
+                                    </div>
+                                    <span class="text-sm text-gray-700">Ecom Express</span>
+                                </div>
+                            </button>
+                        </div>
 
-                    <!-- Location Sharing Controls -->
-                    <div class="space-y-3">
-                        <button id="start-sharing" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50" disabled>
-                            Start Sharing Location
-                        </button>
-                        <button id="stop-sharing" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors hidden">
-                            Stop Sharing Location
-                        </button>
-                    </div>
+                        <!-- Tracking Results -->
+                        <div id="tracking-results" class="hidden">
+                            <div class="border-t pt-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900">Tracking Results</h3>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm text-gray-500">Last updated:</span>
+                                        <span id="last-update-time" class="text-sm font-medium text-gray-900">-</span>
+                                        <button id="refresh-tracking" class="text-beckn-blue hover:text-blue-700 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
 
-                    <!-- Status Display -->
-                    <div id="sharing-status" class="hidden mt-4 p-3 rounded-lg">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 bg-green-500 rounded-full mr-3 pulse-animation"></div>
-                            <span class="text-sm text-gray-700">Sharing location securely...</span>
+                                <!-- Shipment Info -->
+                                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <span class="text-sm text-gray-500">Tracking Number</span>
+                                            <p id="shipment-number" class="font-mono text-lg font-semibold text-gray-900">-</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm text-gray-500">Carrier</span>
+                                            <p id="shipment-carrier" class="text-lg font-semibold text-gray-900">-</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm text-gray-500">Status</span>
+                                            <p id="shipment-status" class="text-lg font-semibold">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tracking Timeline -->
+                                <div class="tracking-timeline">
+                                    <div id="tracking-events" class="space-y-4">
+                                        <!-- Events will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Current Location Info -->
-                <div id="location-info" class="hidden bg-white rounded-lg shadow p-4">
-                    <h3 class="font-semibold mb-2">Current Location</h3>
-                    <div class="text-sm text-gray-600 space-y-1">
-                        <p>Latitude: <span id="current-lat">-</span></p>
-                        <p>Longitude: <span id="current-lng">-</span></p>
-                        <p>Accuracy: <span id="current-accuracy">-</span>m</p>
-                        <p>Last Updated: <span id="last-updated">-</span></p>
+                <!-- Stats Panel -->
+                <div class="space-y-6">
+                    <!-- Quick Stats -->
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Today's Overview</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Total Shipments</span>
+                                <span class="text-2xl font-bold text-beckn-blue">2,847</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">In Transit</span>
+                                <span class="text-2xl font-bold text-beckn-orange">1,256</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Delivered</span>
+                                <span class="text-2xl font-bold text-beckn-green">1,423</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Pending</span>
+                                <span class="text-2xl font-bold text-red-600">168</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Alerts -->
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Alerts</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-red-800">Delayed Shipment</p>
+                                        <p class="text-xs text-red-600">AWB123456789 - 2 hours delay</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-yellow-800">Route Change</p>
+                                        <p class="text-xs text-yellow-600">DL987654321 - New route via Delhi</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-green-800">Out for Delivery</p>
+                                        <p class="text-xs text-green-600">BD555444333 - Expected by 6 PM</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Receiver Interface -->
-            <div id="receiver-interface" class="space-y-4 hidden">
-                <div class="bg-white rounded-lg shadow p-4">
-                    <h2 class="text-lg font-semibold mb-4">Track Someone's Location</h2>
-                    
-                    <!-- Sender ID Input -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Sender ID</label>
-                        <input type="text" id="receiver-sender-id" placeholder="Enter sender ID" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <!-- Tracking Controls -->
-                    <div class="space-y-3">
-                        <button id="start-tracking" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                            Start Tracking
-                        </button>
-                        <button id="stop-tracking" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors hidden">
-                            Stop Tracking
-                        </button>
-                    </div>
-
-                    <!-- Distance Display -->
-                    <div id="distance-display" class="hidden mt-4 p-3 rounded-lg">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-blue-600" id="distance-value">-</div>
-                            <div class="text-sm text-gray-600">meters away</div>
+        <!-- Carrier Network Section -->
+        <div id="carriers-section" class="page-section hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Registered Carriers</h2>
+                    <div class="space-y-4">
+                        <div class="carrier-card p-4 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-bold">BD</span>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="font-semibold text-gray-900">Blue Dart Express</h3>
+                                        <p class="text-sm text-gray-600">Pan-India Express Delivery</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-green-600 font-semibold">Active</div>
+                                    <div class="text-sm text-gray-500">API v2.1</div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Proximity Alert -->
-                    <div id="proximity-alert" class="hidden mt-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 bg-orange-500 rounded-full mr-3 pulse-animation"></div>
-                            <span class="text-sm text-orange-700">You are within 1km of the sender!</span>
+                        <div class="carrier-card p-4 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-bold">DL</span>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="font-semibold text-gray-900">Delhivery</h3>
+                                        <p class="text-sm text-gray-600">E-commerce Logistics</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-green-600 font-semibold">Active</div>
+                                    <div class="text-sm text-gray-500">API v1.8</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carrier-card p-4 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-bold">DT</span>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="font-semibold text-gray-900">DTDC</h3>
+                                        <p class="text-sm text-gray-600">Document & Parcel Service</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-green-600 font-semibold">Active</div>
+                                    <div class="text-sm text-gray-500">API v1.5</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Map Container -->
-                <div id="map-container" class="hidden bg-white rounded-lg shadow overflow-hidden">
-                    <div id="here-map" class="w-full h-64"></div>
-                </div>
-
-                <!-- Location Details -->
-                <div id="tracking-info" class="hidden bg-white rounded-lg shadow p-4">
-                    <h3 class="font-semibold mb-2">Tracking Information</h3>
-                    <div class="text-sm text-gray-600 space-y-1">
-                        <p>Sender Latitude: <span id="sender-lat">-</span></p>
-                        <p>Sender Longitude: <span id="sender-lng">-</span></p>
-                        <p>Your Latitude: <span id="receiver-lat">-</span></p>
-                        <p>Your Longitude: <span id="receiver-lng">-</span></p>
-                        <p>Last Updated: <span id="tracking-updated">-</span></p>
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Network Coverage</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-3">Tier-1 Cities</h3>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="text-center p-2 bg-green-50 rounded border">
+                                    <div class="text-2xl font-bold text-green-600">12</div>
+                                    <div class="text-xs text-gray-600">Cities</div>
+                                </div>
+                                <div class="text-center p-2 bg-blue-50 rounded border">
+                                    <div class="text-2xl font-bold text-blue-600">98%</div>
+                                    <div class="text-xs text-gray-600">Coverage</div>
+                                </div>
+                                <div class="text-center p-2 bg-purple-50 rounded border">
+                                    <div class="text-2xl font-bold text-purple-600">24h</div>
+                                    <div class="text-xs text-gray-600">Avg Time</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-3">Tier-2 Cities</h3>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="text-center p-2 bg-green-50 rounded border">
+                                    <div class="text-2xl font-bold text-green-600">87</div>
+                                    <div class="text-xs text-gray-600">Cities</div>
+                                </div>
+                                <div class="text-center p-2 bg-blue-50 rounded border">
+                                    <div class="text-2xl font-bold text-blue-600">94%</div>
+                                    <div class="text-xs text-gray-600">Coverage</div>
+                                </div>
+                                <div class="text-center p-2 bg-purple-50 rounded border">
+                                    <div class="text-2xl font-bold text-purple-600">48h</div>
+                                    <div class="text-xs text-gray-600">Avg Time</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-3">Tier-3 Cities</h3>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="text-center p-2 bg-green-50 rounded border">
+                                    <div class="text-2xl font-bold text-green-600">156</div>
+                                    <div class="text-xs text-gray-600">Cities</div>
+                                </div>
+                                <div class="text-center p-2 bg-blue-50 rounded border">
+                                    <div class="text-2xl font-bold text-blue-600">78%</div>
+                                    <div class="text-xs text-gray-600">Coverage</div>
+                                </div>
+                                <div class="text-center p-2 bg-purple-50 rounded border">
+                                    <div class="text-2xl font-bold text-purple-600">72h</div>
+                                    <div class="text-xs text-gray-600">Avg Time</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
 
-        <!-- Notifications -->
-        <div id="notifications" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+        <!-- Analytics Section -->
+        <div id="analytics-section" class="page-section hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Performance Analytics</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                                <div class="text-3xl font-bold text-blue-600">99.2%</div>
+                                <div class="text-sm text-gray-600">Delivery Success Rate</div>
+                            </div>
+                            <div class="text-center p-4 bg-green-50 rounded-lg">
+                                <div class="text-3xl font-bold text-green-600">2.1h</div>
+                                <div class="text-sm text-gray-600">Average Tracking Update</div>
+                            </div>
+                            <div class="text-center p-4 bg-purple-50 rounded-lg">
+                                <div class="text-3xl font-bold text-purple-600">97%</div>
+                                <div class="text-sm text-gray-600">API Uptime</div>
+                            </div>
+                            <div class="text-center p-4 bg-orange-50 rounded-lg">
+                                <div class="text-3xl font-bold text-orange-600">1.8s</div>
+                                <div class="text-sm text-gray-600">Average Response Time</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Regional Performance</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <span class="font-medium">North India</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                                        <div class="bg-green-600 h-2 rounded-full" style="width: 95%"></div>
+                                    </div>
+                                    <span class="text-sm text-gray-600">95%</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <span class="font-medium">South India</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                                        <div class="bg-green-600 h-2 rounded-full" style="width: 98%"></div>
+                                    </div>
+                                    <span class="text-sm text-gray-600">98%</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <span class="font-medium">East India</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                                        <div class="bg-yellow-600 h-2 rounded-full" style="width: 87%"></div>
+                                    </div>
+                                    <span class="text-sm text-gray-600">87%</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <span class="font-medium">West India</span>
+                                <div class="flex items-center">
+                                    <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                                        <div class="bg-green-600 h-2 rounded-full" style="width: 92%"></div>
+                                    </div>
+                                    <span class="text-sm text-gray-600">92%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Routes</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Mumbai → Delhi</span>
+                                <span class="font-semibold">2,847</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Bangalore → Chennai</span>
+                                <span class="font-semibold">1,923</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Delhi → Kolkata</span>
+                                <span class="font-semibold">1,456</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Hyderabad → Mumbai</span>
+                                <span class="font-semibold">1,234</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Carrier Performance</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Blue Dart</span>
+                                <span class="font-semibold text-green-600">98.5%</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Delhivery</span>
+                                <span class="font-semibold text-green-600">96.2%</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">DTDC</span>
+                                <span class="font-semibold text-yellow-600">94.1%</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Ecom Express</span>
+                                <span class="font-semibold text-green-600">97.8%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Integration Section -->
+        <div id="integration-section" class="page-section hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">BECKN Protocol Integration</h2>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <h3 class="font-semibold text-blue-900 mb-2">Discovery API</h3>
+                            <p class="text-sm text-blue-800">Find logistics providers and services</p>
+                            <code class="text-xs bg-blue-100 px-2 py-1 rounded mt-2 block">POST /api/v1/search</code>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <h3 class="font-semibold text-green-900 mb-2">Order API</h3>
+                            <p class="text-sm text-green-800">Create and manage shipment orders</p>
+                            <code class="text-xs bg-green-100 px-2 py-1 rounded mt-2 block">POST /api/v1/init</code>
+                        </div>
+                        <div class="p-4 bg-purple-50 rounded-lg">
+                            <h3 class="font-semibold text-purple-900 mb-2">Track API</h3>
+                            <p class="text-sm text-purple-800">Real-time tracking and updates</p>
+                            <code class="text-xs bg-purple-100 px-2 py-1 rounded mt-2 block">GET /api/v1/track/{id}</code>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">API Documentation</h3>
+                        <div class="space-y-2">
+                            <a href="#" class="block p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium">Getting Started Guide</span>
+                                    <span class="text-sm text-gray-500">PDF</span>
+                                </div>
+                            </a>
+                            <a href="#" class="block p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium">API Reference</span>
+                                    <span class="text-sm text-gray-500">Interactive</span>
+                                </div>
+                            </a>
+                            <a href="#" class="block p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium">Code Examples</span>
+                                    <span class="text-sm text-gray-500">GitHub</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Sample Integration</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-2">Track Shipment</h3>
+                            <div class="bg-gray-900 rounded-lg p-4 text-sm">
+                                <pre class="text-green-400"><code>curl -X GET \
+  'https://api.tracksmart.in/v1/track/AWB123456789' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json'</code></pre>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-2">Response</h3>
+                            <div class="bg-gray-900 rounded-lg p-4 text-sm">
+                                <pre class="text-blue-400"><code>{
+  "tracking_number": "AWB123456789",
+  "status": "in_transit",
+  "carrier": "Blue Dart",
+  "current_location": "Mumbai",
+  "destination": "Delhi",
+  "estimated_delivery": "2024-01-15T18:00:00Z",
+  "events": [
+    {
+      "timestamp": "2024-01-14T10:30:00Z",
+      "status": "picked_up",
+      "location": "Mumbai"
+    }
+  ]
+}</code></pre>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-2">SDKs Available</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="p-3 border rounded-lg text-center">
+                                    <div class="font-semibold">Node.js</div>
+                                    <div class="text-sm text-gray-600">npm install tracksmart-sdk</div>
+                                </div>
+                                <div class="p-3 border rounded-lg text-center">
+                                    <div class="font-semibold">Python</div>
+                                    <div class="text-sm text-gray-600">pip install tracksmart</div>
+                                </div>
+                                <div class="p-3 border rounded-lg text-center">
+                                    <div class="font-semibold">PHP</div>
+                                    <div class="text-sm text-gray-600">composer install tracksmart</div>
+                                </div>
+                                <div class="p-3 border rounded-lg text-center">
+                                    <div class="font-semibold">Java</div>
+                                    <div class="text-sm text-gray-600">Maven dependency</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg hidden">
+        <div class="flex items-center">
+            <span id="notification-text"></span>
+            <button onclick="hideNotification()" class="ml-4 text-white hover:text-gray-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
     </div>
 
     <script>
         // Global variables
-        let currentMode = 'sender';
-        let senderKeys = null;
-        let senderId = null;
-        let isSharing = false;
-        let isTracking = false;
-        let sharingInterval = null;
-        let trackingInterval = null;
-        let hereMap = null;
-        let mapInitialized = false;
-
-        // HERE Maps API key (demo key - replace with your own)
-        const HERE_API_KEY = 'demo-key';
+        let currentSection = 'track';
+        let trackingData = {};
+        let demoShipments = [
+            {
+                id: 'AWB123456789',
+                carrier: 'Blue Dart Express',
+                status: 'In Transit',
+                origin: 'Mumbai',
+                destination: 'Delhi',
+                estimatedDelivery: '2024-01-15T18:00:00Z',
+                events: [
+                    { time: '2024-01-14T10:30:00Z', status: 'Picked up', location: 'Mumbai Hub', description: 'Package collected from sender' },
+                    { time: '2024-01-14T14:15:00Z', status: 'In Transit', location: 'Mumbai Sorting Center', description: 'Package sorted and dispatched' },
+                    { time: '2024-01-14T20:45:00Z', status: 'In Transit', location: 'Pune Hub', description: 'Package in transit to Delhi' },
+                    { time: '2024-01-15T08:30:00Z', status: 'In Transit', location: 'Delhi Hub', description: 'Package arrived at destination city' }
+                ]
+            },
+            {
+                id: 'DL987654321',
+                carrier: 'Delhivery',
+                status: 'Out for Delivery',
+                origin: 'Bangalore',
+                destination: 'Chennai',
+                estimatedDelivery: '2024-01-14T17:00:00Z',
+                events: [
+                    { time: '2024-01-13T09:00:00Z', status: 'Picked up', location: 'Bangalore Hub', description: 'Package collected from merchant' },
+                    { time: '2024-01-13T18:30:00Z', status: 'In Transit', location: 'Bangalore Sorting Center', description: 'Package processed and dispatched' },
+                    { time: '2024-01-14T06:00:00Z', status: 'In Transit', location: 'Chennai Hub', description: 'Package arrived at destination hub' },
+                    { time: '2024-01-14T10:30:00Z', status: 'Out for Delivery', location: 'Chennai Delivery Center', description: 'Package out for delivery' }
+                ]
+            }
+        ];
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            setupModeToggle();
-            setupSenderInterface();
-            setupReceiverInterface();
-            showNotification('Welcome to ProximityTracker! Generate keys to start sharing your location.', 'info');
+            setupNavigation();
+            setupTrackingInterface();
+            showNotification('Welcome to TrackSmart! Track your shipments across multiple carriers.', 'success');
         });
 
-        // Mode toggle functionality
-        function setupModeToggle() {
-            document.getElementById('sender-mode').addEventListener('click', () => switchMode('sender'));
-            document.getElementById('receiver-mode').addEventListener('click', () => switchMode('receiver'));
+        // Navigation functionality
+        function setupNavigation() {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const section = this.id.replace('nav-', '');
+                    switchSection(section);
+                });
+            });
         }
 
-        function switchMode(mode) {
-            currentMode = mode;
+        function switchSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.page-section').forEach(sec => {
+                sec.classList.add('hidden');
+            });
+
+            // Show selected section
+            const targetSection = document.getElementById(section + '-section');
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+
+            // Update navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-beckn-blue', 'text-beckn-blue');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            const activeBtn = document.getElementById('nav-' + section);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-gray-500');
+                activeBtn.classList.add('active', 'border-beckn-blue', 'text-beckn-blue');
+            }
+
+            currentSection = section;
+        }
+
+        // Tracking interface setup
+        function setupTrackingInterface() {
+            const trackBtn = document.getElementById('track-btn');
+            const trackInput = document.getElementById('tracking-input');
+            const refreshBtn = document.getElementById('refresh-tracking');
+
+            if (trackBtn) {
+                trackBtn.addEventListener('click', function() {
+                    const trackingNumber = trackInput.value.trim();
+                    if (trackingNumber) {
+                        trackShipment(trackingNumber);
+                    } else {
+                        showNotification('Please enter a tracking number', 'error');
+                    }
+                });
+            }
+
+            if (trackInput) {
+                trackInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        trackBtn.click();
+                    }
+                });
+            }
+
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    const currentTrackingNumber = document.getElementById('shipment-number').textContent;
+                    if (currentTrackingNumber && currentTrackingNumber !== '-') {
+                        trackShipment(currentTrackingNumber);
+                    }
+                });
+            }
+
+            // Quick track buttons
+            document.querySelectorAll('.quick-track-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const carrier = this.dataset.carrier;
+                    showCarrierInfo(carrier);
+                });
+            });
+        }
+
+        function trackShipment(trackingNumber) {
+            showNotification('Tracking shipment...', 'info');
             
-            // Update button styles
-            if (mode === 'sender') {
-                document.getElementById('sender-mode').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md bg-blue-600 text-white transition-colors';
-                document.getElementById('receiver-mode').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors';
-                document.getElementById('sender-interface').classList.remove('hidden');
-                document.getElementById('receiver-interface').classList.add('hidden');
-            } else {
-                document.getElementById('sender-mode').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors';
-                document.getElementById('receiver-mode').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md bg-blue-600 text-white transition-colors';
-                document.getElementById('sender-interface').classList.add('hidden');
-                document.getElementById('receiver-interface').classList.remove('hidden');
+            // Simulate API call delay
+            setTimeout(() => {
+                const shipment = findShipmentByTrackingNumber(trackingNumber);
+                
+                if (shipment) {
+                    displayTrackingResults(shipment);
+                    showNotification('Shipment found successfully!', 'success');
+                } else {
+                    // Show demo data for any tracking number
+                    const demoShipment = demoShipments[Math.floor(Math.random() * demoShipments.length)];
+                    demoShipment.id = trackingNumber;
+                    displayTrackingResults(demoShipment);
+                    showNotification('Shipment tracked successfully!', 'success');
+                }
+            }, 1000);
+        }
+
+        function findShipmentByTrackingNumber(trackingNumber) {
+            return demoShipments.find(shipment => shipment.id === trackingNumber);
+        }
+
+        function displayTrackingResults(shipment) {
+            // Update shipment info
+            document.getElementById('shipment-number').textContent = shipment.id;
+            document.getElementById('shipment-carrier').textContent = shipment.carrier;
+            document.getElementById('shipment-status').textContent = shipment.status;
+            
+            // Set status color
+            const statusElement = document.getElementById('shipment-status');
+            const statusColors = {
+                'Picked up': 'text-blue-600',
+                'In Transit': 'text-yellow-600',
+                'Out for Delivery': 'text-orange-600',
+                'Delivered': 'text-green-600',
+                'Exception': 'text-red-600'
+            };
+            statusElement.className = `text-lg font-semibold ${statusColors[shipment.status] || 'text-gray-600'}`;
+
+            // Update timeline
+            const eventsContainer = document.getElementById('tracking-events');
+            eventsContainer.innerHTML = '';
+            
+            shipment.events.forEach((event, index) => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'timeline-item';
+                
+                const isLatest = index === shipment.events.length - 1;
+                const dotClass = isLatest ? 'timeline-dot active' : 'timeline-dot completed';
+                
+                eventElement.innerHTML = `
+                    <div class="${dotClass}"></div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-gray-900">${event.status}</h4>
+                            <span class="text-sm text-gray-500">${formatDateTime(event.time)}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-1">${event.location}</p>
+                        <p class="text-sm text-gray-500">${event.description}</p>
+                    </div>
+                `;
+                
+                eventsContainer.appendChild(eventElement);
+            });
+
+            // Update last update time
+            document.getElementById('last-update-time').textContent = formatDateTime(new Date().toISOString());
+
+            // Show results
+            document.getElementById('tracking-results').classList.remove('hidden');
+        }
+
+        function showCarrierInfo(carrier) {
+            const carrierNames = {
+                'bluedart': 'Blue Dart Express',
+                'delhivery': 'Delhivery',
+                'dtdc': 'DTDC',
+                'ecom': 'Ecom Express'
+            };
+            
+            showNotification(`Switched to ${carrierNames[carrier]} tracking`, 'info');
+            
+            // Pre-fill tracking input with demo tracking number
+            const demoNumbers = {
+                'bluedart': 'BD123456789',
+                'delhivery': 'DL987654321',
+                'dtdc': 'DT456789123',
+                'ecom': 'EC789123456'
+            };
+            
+            document.getElementById('tracking-input').value = demoNumbers[carrier];
+        }
+
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            
+            notificationText.textContent = message;
+            
+            // Set notification color based on type
+            const colors = {
+                'success': 'bg-green-600',
+                'error': 'bg-red-600',
+                'info': 'bg-blue-600',
+                'warning': 'bg-yellow-600'
+            };
+            
+            notification.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg ${colors[type]}`;
+            notification.classList.remove('hidden');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                hideNotification();
+            }, 5000);
+        }
+
+        function hideNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.add('hidden');
+        }
+
+        // BECKN Protocol simulation
+        function simulateBECKNSearch() {
+            return {
+                providers: [
+                    { name: 'Blue Dart Express', service_types: ['express', 'standard'], coverage: 'pan-india' },
+                    { name: 'Delhivery', service_types: ['ecommerce', 'cod'], coverage: 'tier-1-2-3' },
+                    { name: 'DTDC', service_types: ['document', 'parcel'], coverage: 'pan-india' },
+                    { name: 'Ecom Express', service_types: ['ecommerce', 'reverse'], coverage: 'tier-1-2' }
+                ]
+            };
+        }
+
+        function simulateBECKNTrack(trackingId) {
+            return {
+                tracking_id: trackingId,
+                status: 'in_transit',
+                location: 'Mumbai',
+                estimated_delivery: '2024-01-15T18:00:00Z',
+                events: [
+                    { timestamp: '2024-01-14T10:30:00Z', status: 'picked_up', location: 'Mumbai' }
+                ]
+            };
+        }
+
+        // API Documentation modal (placeholder)
+        document.getElementById('api-docs-btn').addEventListener('click', function() {
+            showNotification('API Documentation will open in a new tab', 'info');
+        });
+
+        // Initialize demo data on page load
+        setTimeout(() => {
+            updateDashboardStats();
+        }, 1000);
+
+        function updateDashboardStats() {
+            // Simulate real-time updates to dashboard numbers
+            const stats = {
+                total: Math.floor(Math.random() * 100) + 2800,
+                transit: Math.floor(Math.random() * 50) + 1200,
+                delivered: Math.floor(Math.random() * 100) + 1400,
+                pending: Math.floor(Math.random() * 20) + 150
+            };
+
+            // Update stats if elements exist
+            const elements = document.querySelectorAll('[class*="text-2xl font-bold"]');
+            if (elements.length >= 4) {
+                elements[0].textContent = stats.total.toLocaleString();
+                elements[1].textContent = stats.transit.toLocaleString();
+                elements[2].textContent = stats.delivered.toLocaleString();
+                elements[3].textContent = stats.pending.toLocaleString();
             }
         }
 

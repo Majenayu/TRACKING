@@ -1,13 +1,14 @@
-# ProximityTracker
+# TrackSmart - Universal Logistics Visibility Platform
 
 ## Overview
 
-ProximityTracker is a simplified single-page web application built with vanilla HTML, CSS, and JavaScript that enables secure, real-time location sharing between users. The application features RSA encryption for location data security, real-time map visualization using HERE Maps API, and proximity-based alerts. It supports both sender and receiver modes for location tracking functionality.
+TrackSmart is a comprehensive logistics visibility platform that addresses the fragmented tracking challenges faced by small businesses and consumers across India. Built as an open-source, API-first solution following BECKN protocol standards, it provides unified tracking across multiple carriers and transport modes with real-time visibility, predictive delivery estimates, and seamless integration capabilities.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-Application structure: HTML and server.js only (no separate folders or CSS files).
+Application structure: Single HTML file with embedded JavaScript, no separate CSS files or complex folder structures.
+Focus on BECKN protocol compliance and Indian logistics ecosystem.
 
 ## System Architecture
 
