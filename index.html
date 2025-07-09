@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProximityTracker</title>
+    <title>TrackSmart - Universal Logistics Visibility Platform</title>
+    <meta name="description" content="Universal logistics tracking platform with E2EE, real-time visibility, and unified tracking across multiple carriers and transport modes.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
     <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
@@ -19,134 +20,421 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .carrier-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            background-color: #3B82F6;
+            color: white;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-pending { background-color: #F59E0B; }
+        .status-picked-up { background-color: #3B82F6; }
+        .status-in-transit { background-color: #8B5CF6; }
+        .status-delivered { background-color: #10B981; }
+        .status-delayed { background-color: #EF4444; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <div class="max-w-md mx-auto bg-white min-h-screen">
+    <div class="max-w-6xl mx-auto bg-white min-h-screen">
         <!-- Header -->
-        <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 text-center">
-            <h1 class="text-2xl font-bold">ProximityTracker</h1>
-            <p class="text-blue-100 mt-2">Secure Location Sharing</p>
+        <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">TrackSmart</h1>
+                    <p class="text-blue-100 mt-2">Universal Logistics Visibility Platform</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-blue-100">BECKN Protocol Enabled</div>
+                    <div class="text-xs text-blue-200">API-First | Multi-Carrier | E2EE</div>
+                </div>
+            </div>
         </header>
 
-        <!-- Mode Toggle -->
-        <div class="p-4 bg-gray-50 border-b">
-            <div class="flex rounded-lg bg-gray-200 p-1">
-                <button id="sender-mode" class="flex-1 py-2 px-4 text-sm font-medium rounded-md bg-blue-600 text-white transition-colors">
-                    Sender Mode
+        <!-- Navigation Tabs -->
+        <div class="bg-gray-50 border-b">
+            <div class="grid grid-cols-5 gap-0">
+                <button id="tab-dashboard" class="py-3 px-4 text-sm font-medium bg-blue-600 text-white border-r border-gray-300">
+                    Dashboard
                 </button>
-                <button id="receiver-mode" class="flex-1 py-2 px-4 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors">
-                    Receiver Mode
+                <button id="tab-track" class="py-3 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r border-gray-300">
+                    Track Package
+                </button>
+                <button id="tab-send" class="py-3 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r border-gray-300">
+                    Send Package
+                </button>
+                <button id="tab-live" class="py-3 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r border-gray-300">
+                    Live Tracking
+                </button>
+                <button id="tab-delivery" class="py-3 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                    Delivery Partner
                 </button>
             </div>
         </div>
 
         <!-- Main Content -->
-        <main class="p-4">
-            <!-- Sender Interface -->
-            <div id="sender-interface" class="space-y-4">
-                <div class="bg-white rounded-lg shadow p-4">
-                    <h2 class="text-lg font-semibold mb-4">Share Your Location</h2>
-                    
-                    <!-- Key Generation -->
-                    <div class="mb-4">
-                        <button id="generate-keys" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                            Generate Security Keys
-                        </button>
-                        <p class="text-sm text-gray-600 mt-2">Generate RSA keys for secure location sharing</p>
+        <main class="p-6">
+            <!-- Dashboard Tab -->
+            <div id="content-dashboard" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+                        <h3 class="text-lg font-semibold mb-2">Total Shipments</h3>
+                        <div class="text-3xl font-bold" id="total-shipments">0</div>
+                        <p class="text-blue-100 text-sm">All time shipments tracked</p>
                     </div>
-
-                    <!-- Sender ID Display -->
-                    <div id="sender-id-display" class="hidden bg-blue-50 p-3 rounded-lg mb-4">
-                        <p class="text-sm text-gray-700">Your Sender ID:</p>
-                        <p id="sender-id" class="font-mono text-lg font-bold text-blue-600"></p>
-                        <p class="text-xs text-gray-500 mt-1">Share this ID with the receiver</p>
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+                        <h3 class="text-lg font-semibold mb-2">Active Shipments</h3>
+                        <div class="text-3xl font-bold" id="active-shipments">0</div>
+                        <p class="text-green-100 text-sm">Currently in transit</p>
                     </div>
-
-                    <!-- Location Sharing Controls -->
-                    <div class="space-y-3">
-                        <button id="start-sharing" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50" disabled>
-                            Start Sharing Location
-                        </button>
-                        <button id="stop-sharing" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors hidden">
-                            Stop Sharing Location
-                        </button>
-                    </div>
-
-                    <!-- Status Display -->
-                    <div id="sharing-status" class="hidden mt-4 p-3 rounded-lg">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 bg-green-500 rounded-full mr-3 pulse-animation"></div>
-                            <span class="text-sm text-gray-700">Sharing location securely...</span>
-                        </div>
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+                        <h3 class="text-lg font-semibold mb-2">Delivery Partners</h3>
+                        <div class="text-3xl font-bold" id="total-providers">0</div>
+                        <p class="text-purple-100 text-sm">Integrated carriers</p>
                     </div>
                 </div>
-
-                <!-- Current Location Info -->
-                <div id="location-info" class="hidden bg-white rounded-lg shadow p-4">
-                    <h3 class="font-semibold mb-2">Current Location</h3>
-                    <div class="text-sm text-gray-600 space-y-1">
-                        <p>Latitude: <span id="current-lat">-</span></p>
-                        <p>Longitude: <span id="current-lng">-</span></p>
-                        <p>Accuracy: <span id="current-accuracy">-</span>m</p>
-                        <p>Last Updated: <span id="last-updated">-</span></p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">Recent Shipments</h3>
+                        <div id="recent-shipments" class="space-y-3">
+                            <!-- Recent shipments will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">Carrier Performance</h3>
+                        <div id="carrier-performance" class="space-y-3">
+                            <!-- Carrier performance will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Receiver Interface -->
-            <div id="receiver-interface" class="space-y-4 hidden">
-                <div class="bg-white rounded-lg shadow p-4">
-                    <h2 class="text-lg font-semibold mb-4">Track Someone's Location</h2>
-                    
-                    <!-- Sender ID Input -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Sender ID</label>
-                        <input type="text" id="receiver-sender-id" placeholder="Enter sender ID" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
+            <!-- Track Package Tab -->
+            <div id="content-track" class="tab-content hidden">
+                <div class="max-w-2xl mx-auto">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-2xl font-bold mb-6">Track Your Package</h2>
+                        
+                        <!-- Tracking Number Input -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tracking Number</label>
+                            <div class="flex gap-3">
+                                <input type="text" id="tracking-number" 
+                                       placeholder="Enter tracking number (e.g., INDPOST123456, FEDEX789012)"
+                                       class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <button id="track-package" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                    Track
+                                </button>
+                            </div>
+                        </div>
 
-                    <!-- Tracking Controls -->
-                    <div class="space-y-3">
-                        <button id="start-tracking" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                            Start Tracking
-                        </button>
-                        <button id="stop-tracking" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors hidden">
-                            Stop Tracking
-                        </button>
-                    </div>
+                        <!-- Quick Track Options -->
+                        <div class="mb-6">
+                            <p class="text-sm text-gray-600 mb-3">Quick track with sample numbers:</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button class="sample-track text-left p-2 bg-gray-50 rounded hover:bg-gray-100" data-number="INDPOST123456">
+                                    <div class="font-medium text-sm">India Post</div>
+                                    <div class="text-xs text-gray-500">INDPOST123456</div>
+                                </button>
+                                <button class="sample-track text-left p-2 bg-gray-50 rounded hover:bg-gray-100" data-number="BLUEDART789012">
+                                    <div class="font-medium text-sm">Blue Dart</div>
+                                    <div class="text-xs text-gray-500">BLUEDART789012</div>
+                                </button>
+                            </div>
+                        </div>
 
-                    <!-- Distance Display -->
-                    <div id="distance-display" class="hidden mt-4 p-3 rounded-lg">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-blue-600" id="distance-value">-</div>
-                            <div class="text-sm text-gray-600">meters away</div>
+                        <!-- Tracking Results -->
+                        <div id="tracking-results" class="hidden">
+                            <!-- Results will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Send Package Tab -->
+            <div id="content-send" class="tab-content hidden">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-2xl font-bold mb-6">Send a Package</h2>
+                        
+                        <form id="send-package-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Sender Information -->
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-semibold text-gray-900">Sender Information</h3>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                        <input type="text" name="senderName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                        <textarea name="senderAddress" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                        <input type="tel" name="senderPhone" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+
+                                <!-- Receiver Information -->
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-semibold text-gray-900">Receiver Information</h3>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                        <input type="text" name="receiverName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                        <textarea name="receiverAddress" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                        <input type="tel" name="receiverPhone" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Package Details -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-semibold text-gray-900">Package Details</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+                                        <input type="number" name="weight" step="0.1" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Dimensions (L×W×H cm)</label>
+                                        <input type="text" name="dimensions" placeholder="20×15×10" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Value (₹)</label>
+                                        <input type="number" name="value" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Transport Mode</label>
+                                        <select name="transportMode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Select transport mode</option>
+                                            <option value="road">Road Transport</option>
+                                            <option value="rail">Rail Transport</option>
+                                            <option value="air">Air Cargo</option>
+                                            <option value="sea">Sea Freight</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Carrier</label>
+                                        <select name="carrierId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" id="carrier-select">
+                                            <option value="">Select carrier</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" name="isFragile" class="mr-2">
+                                    <label class="text-sm text-gray-700">Fragile item</label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                                Create Shipment
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Tracking Tab (E2EE) -->
+            <div id="content-live" class="tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- E2EE Location Sharing -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-xl font-bold mb-4">Live Location Sharing (E2EE)</h2>
+                        
+                        <!-- Key Generation -->
+                        <div class="mb-4">
+                            <button id="generate-keys" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                                Generate Security Keys
+                            </button>
+                            <p class="text-sm text-gray-600 mt-2">Generate RSA keys for secure location sharing</p>
+                        </div>
+
+                        <!-- Sender ID Display -->
+                        <div id="sender-id-display" class="hidden bg-blue-50 p-3 rounded-lg mb-4">
+                            <p class="text-sm text-gray-700">Your Sender ID:</p>
+                            <p id="sender-id" class="font-mono text-lg font-bold text-blue-600"></p>
+                            <p class="text-xs text-gray-500 mt-1">Share this ID with the receiver</p>
+                        </div>
+
+                        <!-- Location Sharing Controls -->
+                        <div class="space-y-3">
+                            <button id="start-sharing" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50" disabled>
+                                Start Sharing Location
+                            </button>
+                            <button id="stop-sharing" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors hidden">
+                                Stop Sharing Location
+                            </button>
+                        </div>
+
+                        <!-- Status Display -->
+                        <div id="sharing-status" class="hidden mt-4 p-3 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mr-3 pulse-animation"></div>
+                                <span class="text-sm text-gray-700">Sharing location securely...</span>
+                            </div>
+                        </div>
+
+                        <!-- Current Location Info -->
+                        <div id="location-info" class="hidden mt-4 bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold mb-2">Current Location</h3>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <p>Latitude: <span id="current-lat">-</span></p>
+                                <p>Longitude: <span id="current-lng">-</span></p>
+                                <p>Accuracy: <span id="current-accuracy">-</span>m</p>
+                                <p>Last Updated: <span id="last-updated">-</span></p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Proximity Alert -->
-                    <div id="proximity-alert" class="hidden mt-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 bg-orange-500 rounded-full mr-3 pulse-animation"></div>
-                            <span class="text-sm text-orange-700">You are within 1km of the sender!</span>
+                    <!-- E2EE Location Tracking -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-xl font-bold mb-4">Track Live Location (E2EE)</h2>
+                        
+                        <!-- Sender ID Input -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Sender ID</label>
+                            <input type="text" id="receiver-sender-id" placeholder="Enter sender ID" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <!-- Tracking Controls -->
+                        <div class="space-y-3">
+                            <button id="start-tracking" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                                Start Tracking
+                            </button>
+                            <button id="stop-tracking" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors hidden">
+                                Stop Tracking
+                            </button>
+                        </div>
+
+                        <!-- Distance Display -->
+                        <div id="distance-display" class="hidden mt-4 p-3 bg-blue-50 rounded-lg">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-blue-600" id="distance-value">-</div>
+                                <div class="text-sm text-gray-600">meters away</div>
+                            </div>
+                        </div>
+
+                        <!-- Proximity Alert -->
+                        <div id="proximity-alert" class="hidden mt-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-orange-500 rounded-full mr-3 pulse-animation"></div>
+                                <span class="text-sm text-orange-700">You are within 1km of the sender!</span>
+                            </div>
+                        </div>
+
+                        <!-- Location Details -->
+                        <div id="tracking-info" class="hidden mt-4 bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold mb-2">Tracking Information</h3>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <p>Sender Latitude: <span id="sender-lat">-</span></p>
+                                <p>Sender Longitude: <span id="sender-lng">-</span></p>
+                                <p>Your Latitude: <span id="receiver-lat">-</span></p>
+                                <p>Your Longitude: <span id="receiver-lng">-</span></p>
+                                <p>Last Updated: <span id="tracking-updated">-</span></p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Map Container -->
-                <div id="map-container" class="hidden bg-white rounded-lg shadow overflow-hidden">
-                    <div id="here-map" class="w-full h-64"></div>
+                <div id="map-container" class="hidden mt-6 bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div id="here-map" class="w-full h-96"></div>
                 </div>
+            </div>
 
-                <!-- Location Details -->
-                <div id="tracking-info" class="hidden bg-white rounded-lg shadow p-4">
-                    <h3 class="font-semibold mb-2">Tracking Information</h3>
-                    <div class="text-sm text-gray-600 space-y-1">
-                        <p>Sender Latitude: <span id="sender-lat">-</span></p>
-                        <p>Sender Longitude: <span id="sender-lng">-</span></p>
-                        <p>Your Latitude: <span id="receiver-lat">-</span></p>
-                        <p>Your Longitude: <span id="receiver-lng">-</span></p>
-                        <p>Last Updated: <span id="tracking-updated">-</span></p>
+            <!-- Delivery Partner Tab -->
+            <div id="content-delivery" class="tab-content hidden">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-2xl font-bold mb-6">Delivery Partner Dashboard</h2>
+                        
+                        <!-- Partner Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h3 class="text-sm font-medium text-gray-600">Assigned Deliveries</h3>
+                                <div class="text-2xl font-bold text-blue-600" id="assigned-deliveries">0</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h3 class="text-sm font-medium text-gray-600">Completed Today</h3>
+                                <div class="text-2xl font-bold text-green-600" id="completed-today">0</div>
+                            </div>
+                            <div class="bg-yellow-50 rounded-lg p-4">
+                                <h3 class="text-sm font-medium text-gray-600">In Transit</h3>
+                                <div class="text-2xl font-bold text-yellow-600" id="in-transit">0</div>
+                            </div>
+                            <div class="bg-purple-50 rounded-lg p-4">
+                                <h3 class="text-sm font-medium text-gray-600">Success Rate</h3>
+                                <div class="text-2xl font-bold text-purple-600" id="success-rate">100%</div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Actions -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold mb-3">Update Delivery Status</h3>
+                                <div class="space-y-3">
+                                    <input type="text" id="delivery-tracking-number" placeholder="Enter tracking number" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <select id="delivery-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                        <option value="">Select status</option>
+                                        <option value="picked_up">Picked Up</option>
+                                        <option value="in_transit">In Transit</option>
+                                        <option value="out_for_delivery">Out for Delivery</option>
+                                        <option value="delivered">Delivered</option>
+                                        <option value="delayed">Delayed</option>
+                                        <option value="exception">Exception</option>
+                                    </select>
+                                    <input type="text" id="delivery-location" placeholder="Current location" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <button id="update-delivery-status" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
+                                        Update Status
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold mb-3">Real-time Location Sharing</h3>
+                                <p class="text-sm text-gray-600 mb-3">Share your live location for better tracking</p>
+                                <button id="share-delivery-location" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700">
+                                    Start Location Sharing
+                                </button>
+                                <div id="delivery-location-status" class="hidden mt-3 p-2 bg-green-100 rounded">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2 pulse-animation"></div>
+                                        <span class="text-sm text-green-700">Location sharing active</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assigned Deliveries List -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="text-lg font-semibold mb-3">Assigned Deliveries</h3>
+                            <div id="assigned-deliveries-list" class="space-y-3">
+                                <!-- Delivery items will be loaded here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -158,7 +446,7 @@
 
     <script>
         // Global variables
-        let currentMode = 'sender';
+        let currentTab = 'dashboard';
         let senderKeys = null;
         let senderId = null;
         let isSharing = false;
@@ -168,16 +456,825 @@
         let hereMap = null;
         let mapInitialized = false;
 
-        // HERE Maps API key (demo key - replace with your own)
-        const HERE_API_KEY = 'demo-key';
+        // HERE Maps API key
+        const HERE_API_KEY = 'API_KEY_HERE_MAPS';
+
+        // Sample data for demo purposes
+        const carriers = [
+            { id: 1, name: 'India Post', code: 'INDPOST', supportedModes: ['road', 'rail'], apiEndpoint: 'https://api.indiapost.gov.in' },
+            { id: 2, name: 'Blue Dart', code: 'BLUEDART', supportedModes: ['road', 'air'], apiEndpoint: 'https://api.bluedart.com' },
+            { id: 3, name: 'DTDC', code: 'DTDC', supportedModes: ['road'], apiEndpoint: 'https://api.dtdc.in' },
+            { id: 4, name: 'FedEx', code: 'FEDEX', supportedModes: ['road', 'air'], apiEndpoint: 'https://api.fedex.com' },
+            { id: 5, name: 'Delhivery', code: 'DELHIVERY', supportedModes: ['road', 'rail'], apiEndpoint: 'https://api.delhivery.com' },
+            { id: 6, name: 'Ecom Express', code: 'ECOM', supportedModes: ['road'], apiEndpoint: 'https://api.ecomexpress.in' }
+        ];
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            setupModeToggle();
-            setupSenderInterface();
-            setupReceiverInterface();
-            showNotification('Welcome to ProximityTracker! Generate keys to start sharing your location.', 'info');
+            setupTabNavigation();
+            setupTrackingInterface();
+            setupSendPackageInterface();
+            setupLiveTrackingInterface();
+            setupDeliveryPartnerInterface();
+            loadDashboardData();
+            loadCarriers();
+            showNotification('Welcome to TrackSmart! Universal Logistics Visibility Platform with E2EE enabled.', 'info');
         });
+
+        // Tab Navigation
+        function setupTabNavigation() {
+            const tabs = ['dashboard', 'track', 'send', 'live', 'delivery'];
+            tabs.forEach(tab => {
+                document.getElementById(`tab-${tab}`).addEventListener('click', () => switchTab(tab));
+            });
+        }
+
+        function switchTab(tab) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('[id^="tab-"]').forEach(tabBtn => {
+                tabBtn.className = 'py-3 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r border-gray-300';
+            });
+            
+            // Show selected tab content
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+            
+            // Add active class to selected tab
+            document.getElementById(`tab-${tab}`).className = 'py-3 px-4 text-sm font-medium bg-blue-600 text-white border-r border-gray-300';
+            
+            currentTab = tab;
+            
+            // Load tab-specific data
+            if (tab === 'dashboard') loadDashboardData();
+            if (tab === 'delivery') loadDeliveryPartnerData();
+        }
+
+        // Dashboard functions
+        function loadDashboardData() {
+            // Simulate loading dashboard data
+            setTimeout(() => {
+                document.getElementById('total-shipments').textContent = Math.floor(Math.random() * 1000) + 500;
+                document.getElementById('active-shipments').textContent = Math.floor(Math.random() * 50) + 10;
+                document.getElementById('total-providers').textContent = carriers.length;
+                
+                loadRecentShipments();
+                loadCarrierPerformance();
+            }, 500);
+        }
+
+        function loadRecentShipments() {
+            const recentShipmentsContainer = document.getElementById('recent-shipments');
+            const sampleShipments = [
+                { trackingNumber: 'INDPOST123456', carrier: 'India Post', status: 'in_transit', destination: 'Mumbai' },
+                { trackingNumber: 'BLUEDART789012', carrier: 'Blue Dart', status: 'delivered', destination: 'Delhi' },
+                { trackingNumber: 'DTDC345678', carrier: 'DTDC', status: 'picked_up', destination: 'Bangalore' },
+                { trackingNumber: 'FEDEX901234', carrier: 'FedEx', status: 'pending', destination: 'Chennai' }
+            ];
+            
+            recentShipmentsContainer.innerHTML = sampleShipments.map(shipment => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="font-medium">${shipment.trackingNumber}</div>
+                        <div class="text-sm text-gray-600">${shipment.carrier} → ${shipment.destination}</div>
+                    </div>
+                    <span class="carrier-badge status-${shipment.status}">${shipment.status.replace('_', ' ')}</span>
+                </div>
+            `).join('');
+        }
+
+        function loadCarrierPerformance() {
+            const performanceContainer = document.getElementById('carrier-performance');
+            const performance = carriers.map(carrier => ({
+                name: carrier.name,
+                onTime: Math.floor(Math.random() * 20) + 80,
+                totalShipments: Math.floor(Math.random() * 100) + 50
+            }));
+            
+            performanceContainer.innerHTML = performance.map(p => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="font-medium">${p.name}</div>
+                        <div class="text-sm text-gray-600">${p.totalShipments} shipments</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-green-600">${p.onTime}%</div>
+                        <div class="text-xs text-gray-500">On time</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Package Tracking functions
+        function setupTrackingInterface() {
+            document.getElementById('track-package').addEventListener('click', trackPackage);
+            document.querySelectorAll('.sample-track').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const trackingNumber = e.currentTarget.dataset.number;
+                    document.getElementById('tracking-number').value = trackingNumber;
+                    trackPackage();
+                });
+            });
+        }
+
+        async function trackPackage() {
+            const trackingNumber = document.getElementById('tracking-number').value.trim();
+            if (!trackingNumber) {
+                showNotification('Please enter a tracking number', 'error');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('tracking-results');
+            resultsContainer.classList.remove('hidden');
+            
+            // Show loading state
+            resultsContainer.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p class="mt-4 text-gray-600">Tracking package across multiple carriers...</p>
+                </div>
+            `;
+
+            // Simulate API call with BECKN protocol
+            setTimeout(() => {
+                const carrier = carriers.find(c => trackingNumber.includes(c.code)) || carriers[0];
+                const trackingData = generateMockTrackingData(trackingNumber, carrier);
+                displayTrackingResults(trackingData);
+            }, 2000);
+        }
+
+        function generateMockTrackingData(trackingNumber, carrier) {
+            const statuses = ['pending', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered'];
+            const currentStatusIndex = Math.floor(Math.random() * statuses.length);
+            const currentStatus = statuses[currentStatusIndex];
+            
+            const events = [];
+            for (let i = 0; i <= currentStatusIndex; i++) {
+                const date = new Date();
+                date.setHours(date.getHours() - (currentStatusIndex - i) * 24);
+                events.push({
+                    status: statuses[i],
+                    description: getStatusDescription(statuses[i]),
+                    location: getRandomLocation(),
+                    timestamp: date.toISOString()
+                });
+            }
+            
+            return {
+                trackingNumber,
+                carrier: carrier.name,
+                currentStatus,
+                estimatedDelivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+                origin: 'Mumbai, Maharashtra',
+                destination: 'Delhi, NCR',
+                events: events.reverse()
+            };
+        }
+
+        function getStatusDescription(status) {
+            const descriptions = {
+                'pending': 'Package received and processing initiated',
+                'picked_up': 'Package picked up from origin facility',
+                'in_transit': 'Package in transit to destination hub',
+                'out_for_delivery': 'Package out for delivery',
+                'delivered': 'Package successfully delivered'
+            };
+            return descriptions[status] || 'Status update';
+        }
+
+        function getRandomLocation() {
+            const locations = [
+                'Mumbai Central Hub', 'Delhi Distribution Center', 'Bangalore Sorting Facility',
+                'Chennai Hub', 'Hyderabad Depot', 'Pune Transit Center', 'Kolkata Hub'
+            ];
+            return locations[Math.floor(Math.random() * locations.length)];
+        }
+
+        function displayTrackingResults(data) {
+            const resultsContainer = document.getElementById('tracking-results');
+            resultsContainer.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Package Status Card -->
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900">${data.trackingNumber}</h3>
+                                <p class="text-gray-600">${data.carrier}</p>
+                            </div>
+                            <span class="carrier-badge status-${data.currentStatus}">${data.currentStatus.replace('_', ' ')}</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500">Origin:</span>
+                                <div class="font-medium">${data.origin}</div>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Destination:</span>
+                                <div class="font-medium">${data.destination}</div>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Est. Delivery:</span>
+                                <div class="font-medium">${data.estimatedDelivery}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tracking Timeline -->
+                    <div class="bg-white rounded-lg border p-6">
+                        <h4 class="text-lg font-semibold mb-4">Tracking History</h4>
+                        <div class="space-y-4">
+                            ${data.events.map((event, index) => `
+                                <div class="flex items-start space-x-4 ${index === 0 ? 'text-blue-600' : 'text-gray-600'}">
+                                    <div class="w-3 h-3 rounded-full ${index === 0 ? 'bg-blue-600' : 'bg-gray-300'} mt-2"></div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <div class="font-medium">${event.description}</div>
+                                                <div class="text-sm ${index === 0 ? 'text-blue-500' : 'text-gray-500'}">${event.location}</div>
+                                            </div>
+                                            <div class="text-sm ${index === 0 ? 'text-blue-500' : 'text-gray-500'}">
+                                                ${new Date(event.timestamp).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- BECKN Protocol Info -->
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span class="text-sm font-medium text-green-800">BECKN Protocol Integration Active</span>
+                        </div>
+                        <p class="text-xs text-green-700 mt-1">Real-time data aggregated from multiple carrier APIs</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Send Package functions
+        function setupSendPackageInterface() {
+            document.getElementById('send-package-form').addEventListener('submit', handleSendPackage);
+        }
+
+        function loadCarriers() {
+            const carrierSelect = document.getElementById('carrier-select');
+            carrierSelect.innerHTML = '<option value="">Select carrier</option>' + 
+                carriers.map(carrier => `<option value="${carrier.id}">${carrier.name} (${carrier.supportedModes.join(', ')})</option>`).join('');
+        }
+
+        async function handleSendPackage(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const shipmentData = Object.fromEntries(formData.entries());
+            
+            // Add some validation
+            if (!shipmentData.carrierId) {
+                showNotification('Please select a carrier', 'error');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating Shipment...';
+            submitBtn.disabled = true;
+
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Generate tracking number
+                const carrier = carriers.find(c => c.id == shipmentData.carrierId);
+                const trackingNumber = `${carrier.code}${Math.random().toString().substr(2, 8)}`;
+                
+                showNotification(`Shipment created successfully! Tracking number: ${trackingNumber}`, 'success');
+                
+                // Reset form
+                e.target.reset();
+                loadCarriers();
+                
+                // Show success modal or redirect
+                setTimeout(() => {
+                    switchTab('track');
+                    document.getElementById('tracking-number').value = trackingNumber;
+                }, 1000);
+                
+            } catch (error) {
+                showNotification('Failed to create shipment. Please try again.', 'error');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Live Tracking (E2EE) functions
+        function setupLiveTrackingInterface() {
+            document.getElementById('generate-keys').addEventListener('click', generateKeys);
+            document.getElementById('start-sharing').addEventListener('click', startLocationSharing);
+            document.getElementById('stop-sharing').addEventListener('click', stopLocationSharing);
+            document.getElementById('start-tracking').addEventListener('click', startTracking);
+            document.getElementById('stop-tracking').addEventListener('click', stopTracking);
+        }
+
+        async function generateKeys() {
+            try {
+                showNotification('Generating RSA keys...', 'info');
+                
+                // Generate RSA key pair
+                const crypt = new JSEncrypt({default_key_size: 2048});
+                crypt.getKey();
+                
+                senderKeys = {
+                    public: crypt.getPublicKey(),
+                    private: crypt.getPrivateKey()
+                };
+                
+                // Generate unique sender ID
+                senderId = 'sender_' + Math.random().toString(36).substr(2, 9);
+                
+                // Store keys on server
+                const response = await fetch('/api/keys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        senderId: senderId,
+                        publicKey: senderKeys.public,
+                        privateKey: senderKeys.private
+                    })
+                });
+                
+                if (response.ok) {
+                    // Show sender ID
+                    document.getElementById('sender-id').textContent = senderId;
+                    document.getElementById('sender-id-display').classList.remove('hidden');
+                    document.getElementById('start-sharing').disabled = false;
+                    
+                    showNotification('Keys generated successfully! Share your Sender ID with the receiver.', 'success');
+                } else {
+                    throw new Error('Failed to store keys');
+                }
+                
+            } catch (error) {
+                console.error('Error generating keys:', error);
+                showNotification('Failed to generate keys. Please try again.', 'error');
+            }
+        }
+
+        async function startLocationSharing() {
+            if (!senderKeys || !senderId) {
+                showNotification('Please generate keys first', 'error');
+                return;
+            }
+
+            try {
+                // Request location permission
+                const position = await getCurrentPosition();
+                
+                isSharing = true;
+                document.getElementById('start-sharing').classList.add('hidden');
+                document.getElementById('stop-sharing').classList.remove('hidden');
+                document.getElementById('sharing-status').classList.remove('hidden');
+                document.getElementById('location-info').classList.remove('hidden');
+                
+                // Start sharing location every 2 seconds
+                sharingInterval = setInterval(shareLocation, 2000);
+                shareLocation(); // Share immediately
+                
+                showNotification('Started sharing location securely', 'success');
+                
+            } catch (error) {
+                console.error('Error starting location sharing:', error);
+                showNotification('Failed to access location. Please enable location services.', 'error');
+            }
+        }
+
+        async function shareLocation() {
+            try {
+                const position = await getCurrentPosition();
+                const { latitude, longitude, accuracy } = position.coords;
+                
+                // Update UI
+                document.getElementById('current-lat').textContent = latitude.toFixed(6);
+                document.getElementById('current-lng').textContent = longitude.toFixed(6);
+                document.getElementById('current-accuracy').textContent = accuracy.toFixed(0);
+                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+                
+                // Encrypt location data
+                const locationData = JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude,
+                    accuracy: accuracy,
+                    timestamp: Date.now()
+                });
+                
+                const crypt = new JSEncrypt();
+                crypt.setPublicKey(senderKeys.public);
+                const encryptedData = crypt.encrypt(locationData);
+                
+                // Send to server
+                const response = await fetch('/api/location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        senderId: senderId,
+                        encryptedData: encryptedData,
+                        publicKey: senderKeys.public,
+                        timestamp: Date.now()
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to share location');
+                }
+                
+            } catch (error) {
+                console.error('Error sharing location:', error);
+                showNotification('Failed to share location', 'error');
+            }
+        }
+
+        function stopLocationSharing() {
+            isSharing = false;
+            if (sharingInterval) {
+                clearInterval(sharingInterval);
+                sharingInterval = null;
+            }
+            
+            document.getElementById('start-sharing').classList.remove('hidden');
+            document.getElementById('stop-sharing').classList.add('hidden');
+            document.getElementById('sharing-status').classList.add('hidden');
+            
+            showNotification('Stopped sharing location', 'info');
+        }
+
+        async function startTracking() {
+            const inputSenderId = document.getElementById('receiver-sender-id').value.trim();
+            
+            if (!inputSenderId) {
+                showNotification('Please enter a sender ID', 'error');
+                return;
+            }
+            
+            try {
+                // Get receiver's location
+                const receiverPosition = await getCurrentPosition();
+                
+                isTracking = true;
+                document.getElementById('start-tracking').classList.add('hidden');
+                document.getElementById('stop-tracking').classList.remove('hidden');
+                document.getElementById('distance-display').classList.remove('hidden');
+                document.getElementById('tracking-info').classList.remove('hidden');
+                
+                // Initialize map
+                if (!mapInitialized) {
+                    initializeMap();
+                }
+                
+                // Start tracking every 2 seconds
+                trackingInterval = setInterval(() => trackLocation(inputSenderId, receiverPosition), 2000);
+                trackLocation(inputSenderId, receiverPosition); // Track immediately
+                
+                showNotification('Started tracking location', 'success');
+                
+            } catch (error) {
+                console.error('Error starting tracking:', error);
+                showNotification('Failed to start tracking. Please check sender ID and try again.', 'error');
+            }
+        }
+
+        async function trackLocation(senderId, receiverPosition) {
+            try {
+                // Get current receiver position
+                const currentReceiverPos = await getCurrentPosition();
+                
+                // Fetch sender's encrypted location
+                const response = await fetch(`/api/location/${senderId}`);
+                if (!response.ok) {
+                    throw new Error('Sender not found or not sharing location');
+                }
+                
+                const data = await response.json();
+                
+                // Get sender's private key for decryption
+                const keysResponse = await fetch(`/api/keys/${senderId}`);
+                if (!keysResponse.ok) {
+                    throw new Error('Keys not found');
+                }
+                
+                const keysData = await keysResponse.json();
+                
+                // Decrypt location data
+                const crypt = new JSEncrypt();
+                crypt.setPrivateKey(keysData.privateKey);
+                const decryptedData = crypt.decrypt(data.encryptedData);
+                
+                if (!decryptedData) {
+                    throw new Error('Failed to decrypt location data');
+                }
+                
+                const senderLocation = JSON.parse(decryptedData);
+                
+                // Calculate distance
+                const distance = calculateDistance(
+                    currentReceiverPos.coords.latitude,
+                    currentReceiverPos.coords.longitude,
+                    senderLocation.latitude,
+                    senderLocation.longitude
+                );
+                
+                // Update UI
+                document.getElementById('distance-value').textContent = Math.round(distance);
+                document.getElementById('sender-lat').textContent = senderLocation.latitude.toFixed(6);
+                document.getElementById('sender-lng').textContent = senderLocation.longitude.toFixed(6);
+                document.getElementById('receiver-lat').textContent = currentReceiverPos.coords.latitude.toFixed(6);
+                document.getElementById('receiver-lng').textContent = currentReceiverPos.coords.longitude.toFixed(6);
+                document.getElementById('tracking-updated').textContent = new Date().toLocaleTimeString();
+                
+                // Proximity alert
+                if (distance <= 1000) {
+                    document.getElementById('proximity-alert').classList.remove('hidden');
+                } else {
+                    document.getElementById('proximity-alert').classList.add('hidden');
+                }
+                
+                // Update map
+                if (hereMap) {
+                    updateMap(senderLocation, currentReceiverPos.coords);
+                }
+                
+            } catch (error) {
+                console.error('Error tracking location:', error);
+                showNotification('Failed to track location', 'error');
+            }
+        }
+
+        function stopTracking() {
+            isTracking = false;
+            if (trackingInterval) {
+                clearInterval(trackingInterval);
+                trackingInterval = null;
+            }
+            
+            document.getElementById('start-tracking').classList.remove('hidden');
+            document.getElementById('stop-tracking').classList.add('hidden');
+            document.getElementById('distance-display').classList.add('hidden');
+            document.getElementById('tracking-info').classList.add('hidden');
+            document.getElementById('proximity-alert').classList.add('hidden');
+            
+            if (hereMap) {
+                document.getElementById('map-container').classList.add('hidden');
+            }
+            
+            showNotification('Stopped tracking location', 'info');
+        }
+
+        // Delivery Partner functions
+        function setupDeliveryPartnerInterface() {
+            document.getElementById('update-delivery-status').addEventListener('click', updateDeliveryStatus);
+            document.getElementById('share-delivery-location').addEventListener('click', toggleDeliveryLocationSharing);
+        }
+
+        function loadDeliveryPartnerData() {
+            // Simulate loading delivery partner data
+            setTimeout(() => {
+                document.getElementById('assigned-deliveries').textContent = Math.floor(Math.random() * 20) + 5;
+                document.getElementById('completed-today').textContent = Math.floor(Math.random() * 10) + 2;
+                document.getElementById('in-transit').textContent = Math.floor(Math.random() * 8) + 1;
+                document.getElementById('success-rate').textContent = (Math.random() * 10 + 90).toFixed(1) + '%';
+                
+                loadAssignedDeliveries();
+            }, 500);
+        }
+
+        function loadAssignedDeliveries() {
+            const deliveriesContainer = document.getElementById('assigned-deliveries-list');
+            const sampleDeliveries = [
+                { trackingNumber: 'INDPOST123456', destination: 'Mumbai Central', status: 'picked_up', priority: 'normal' },
+                { trackingNumber: 'BLUEDART789012', destination: 'Delhi Cantt', status: 'in_transit', priority: 'high' },
+                { trackingNumber: 'DTDC345678', destination: 'Bangalore HSR', status: 'out_for_delivery', priority: 'normal' }
+            ];
+            
+            deliveriesContainer.innerHTML = sampleDeliveries.map(delivery => `
+                <div class="flex justify-between items-center p-3 bg-white rounded-lg border">
+                    <div>
+                        <div class="font-medium">${delivery.trackingNumber}</div>
+                        <div class="text-sm text-gray-600">${delivery.destination}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="carrier-badge status-${delivery.status}">${delivery.status.replace('_', ' ')}</span>
+                        ${delivery.priority === 'high' ? '<div class="text-xs text-red-600 font-medium mt-1">High Priority</div>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateDeliveryStatus() {
+            const trackingNumber = document.getElementById('delivery-tracking-number').value.trim();
+            const status = document.getElementById('delivery-status').value;
+            const location = document.getElementById('delivery-location').value.trim();
+            
+            if (!trackingNumber || !status) {
+                showNotification('Please fill in tracking number and status', 'error');
+                return;
+            }
+
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showNotification(`Status updated: ${trackingNumber} is now ${status.replace('_', ' ')}`, 'success');
+                
+                // Clear form
+                document.getElementById('delivery-tracking-number').value = '';
+                document.getElementById('delivery-status').value = '';
+                document.getElementById('delivery-location').value = '';
+                
+                // Reload deliveries
+                loadAssignedDeliveries();
+                
+            } catch (error) {
+                showNotification('Failed to update status', 'error');
+            }
+        }
+
+        function toggleDeliveryLocationSharing() {
+            const btn = document.getElementById('share-delivery-location');
+            const status = document.getElementById('delivery-location-status');
+            
+            if (btn.textContent.includes('Start')) {
+                btn.textContent = 'Stop Location Sharing';
+                btn.className = 'w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700';
+                status.classList.remove('hidden');
+                showNotification('Started sharing delivery location', 'success');
+            } else {
+                btn.textContent = 'Start Location Sharing';
+                btn.className = 'w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700';
+                status.classList.add('hidden');
+                showNotification('Stopped sharing delivery location', 'info');
+            }
+        }
+
+        // Utility functions
+        function getCurrentPosition() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocation is not supported'));
+                    return;
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    position => resolve(position),
+                    error => reject(error),
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 30000
+                    }
+                );
+            });
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type} max-w-sm p-4 mb-2 rounded-lg shadow-lg transform transition-all duration-300`;
+            
+            const colors = {
+                'success': 'bg-green-100 border border-green-400 text-green-700',
+                'error': 'bg-red-100 border border-red-400 text-red-700',
+                'warning': 'bg-yellow-100 border border-yellow-400 text-yellow-700',
+                'info': 'bg-blue-100 border border-blue-400 text-blue-700'
+            };
+            
+            notification.className += ` ${colors[type]}`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium">${message}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-lg leading-none">&times;</button>
+                </div>
+            `;
+            
+            document.getElementById('notifications').appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // HERE Maps integration
+        function initializeMap() {
+            if (mapInitialized || !HERE_API_KEY || HERE_API_KEY === 'API_KEY_HERE_MAPS') {
+                showNotification('HERE Maps API key required for map visualization', 'warning');
+                return;
+            }
+            
+            try {
+                // Initialize the platform object
+                const platform = new H.service.Platform({
+                    'apikey': HERE_API_KEY
+                });
+                
+                // Obtain the default map types from the platform object
+                const defaultLayers = platform.createDefaultLayers();
+                
+                // Initialize the map
+                hereMap = new H.Map(
+                    document.getElementById('here-map'),
+                    defaultLayers.vector.normal.map,
+                    {
+                        zoom: 10,
+                        center: { lat: 28.6139, lng: 77.2090 } // Default to Delhi
+                    }
+                );
+                
+                // Make the map interactive
+                const behavior = new H.mapevents.Behavior();
+                const ui = new H.ui.UI.createDefault(hereMap);
+                
+                mapInitialized = true;
+                document.getElementById('map-container').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                showNotification('Failed to initialize map', 'error');
+            }
+        }
+
+        function updateMap(senderLocation, receiverLocation) {
+            if (!hereMap) return;
+            
+            try {
+                // Clear existing objects
+                hereMap.getObjects().forEach(obj => hereMap.removeObject(obj));
+                
+                // Create markers
+                const senderMarker = new H.map.Marker({
+                    lat: senderLocation.latitude,
+                    lng: senderLocation.longitude
+                });
+                
+                const receiverMarker = new H.map.Marker({
+                    lat: receiverLocation.latitude,
+                    lng: receiverLocation.longitude
+                });
+                
+                // Add markers to map
+                hereMap.addObject(senderMarker);
+                hereMap.addObject(receiverMarker);
+                
+                // Create line between points
+                const lineString = new H.geo.LineString();
+                lineString.pushPoint(senderLocation.latitude, senderLocation.longitude);
+                lineString.pushPoint(receiverLocation.latitude, receiverLocation.longitude);
+                
+                const line = new H.map.Polyline(lineString, {
+                    style: { strokeColor: 'blue', lineWidth: 3 }
+                });
+                
+                hereMap.addObject(line);
+                
+                // Set view to show both points
+                const group = new H.map.Group();
+                group.addObject(senderMarker);
+                group.addObject(receiverMarker);
+                hereMap.getViewPort().setViewBounds(group.getBoundingBox());
+                
+            } catch (error) {
+                console.error('Error updating map:', error);
+            }
+        }
+                            <span class="text-sm font-medium text-green-800">BECKN Protocol Integration Active</span>
+                        </div>
+                        <p class="text-xs text-green-700 mt-1">Real-time data aggregated from multiple carrier APIs</p>
+                    </div>
+                </div>
+            `;
+        }
 
         // Mode toggle functionality
         function setupModeToggle() {

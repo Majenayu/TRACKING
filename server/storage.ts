@@ -1,7 +1,7 @@
 import { users, providers, shipments, trackingEvents, integrations } from "@shared/schema";
 import type { User, InsertUser, Provider, InsertProvider, Shipment, InsertShipment, TrackingEvent, InsertTrackingEvent, Integration, InsertIntegration } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, like, sql } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -191,7 +191,7 @@ export class MemStorage implements IStorage {
       isFragile: true,
     });
 
-    const shipment3 = await this.createShipment({
+    await this.createShipment({
       trackingNumber: 'TS11223344',
       providerId: 3,
       senderId: 1,
@@ -252,7 +252,10 @@ export class MemStorage implements IStorage {
   async createUser(user: InsertUser): Promise<User> {
     const newUser: User = {
       id: this.nextUserId++,
-      ...user,
+      username: user.username,
+      email: user.email,
+      password: user.password,
+      role: user.role || 'user',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -271,7 +274,11 @@ export class MemStorage implements IStorage {
   async createProvider(provider: InsertProvider): Promise<Provider> {
     const newProvider: Provider = {
       id: this.nextProviderId++,
-      ...provider,
+      name: provider.name,
+      code: provider.code,
+      apiEndpoint: provider.apiEndpoint || null,
+      supportedModes: provider.supportedModes,
+      isActive: provider.isActive !== undefined ? provider.isActive : true,
       createdAt: new Date(),
     };
     this.providers.set(newProvider.id, newProvider);
@@ -289,7 +296,20 @@ export class MemStorage implements IStorage {
   async createShipment(shipment: InsertShipment): Promise<Shipment> {
     const newShipment: Shipment = {
       id: this.nextShipmentId++,
-      ...shipment,
+      trackingNumber: shipment.trackingNumber,
+      providerId: shipment.providerId,
+      senderId: shipment.senderId,
+      receiverId: shipment.receiverId,
+      origin: shipment.origin,
+      destination: shipment.destination,
+      transportMode: shipment.transportMode,
+      currentStatus: shipment.currentStatus || 'pending',
+      estimatedDelivery: shipment.estimatedDelivery || null,
+      actualDelivery: shipment.actualDelivery || null,
+      weight: shipment.weight || null,
+      dimensions: shipment.dimensions || null,
+      value: shipment.value || null,
+      isFragile: shipment.isFragile || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -319,7 +339,13 @@ export class MemStorage implements IStorage {
   async createTrackingEvent(event: InsertTrackingEvent): Promise<TrackingEvent> {
     const newEvent: TrackingEvent = {
       id: this.nextTrackingEventId++,
-      ...event,
+      shipmentId: event.shipmentId,
+      eventType: event.eventType,
+      description: event.description,
+      location: event.location || null,
+      latitude: event.latitude || null,
+      longitude: event.longitude || null,
+      timestamp: event.timestamp,
       createdAt: new Date(),
     };
     this.trackingEvents.set(newEvent.id, newEvent);
@@ -335,7 +361,11 @@ export class MemStorage implements IStorage {
   async createIntegration(integration: InsertIntegration): Promise<Integration> {
     const newIntegration: Integration = {
       id: this.nextIntegrationId++,
-      ...integration,
+      userId: integration.userId,
+      businessName: integration.businessName,
+      apiKey: integration.apiKey,
+      isActive: integration.isActive !== undefined ? integration.isActive : true,
+      webhookUrl: integration.webhookUrl || null,
       createdAt: new Date(),
     };
     this.integrations.set(newIntegration.id, newIntegration);
