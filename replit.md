@@ -2,29 +2,29 @@
 
 ## Overview
 
-ProximityTracker is a full-stack web application built with React and Express that enables secure, real-time location sharing between users. The application features RSA encryption for location data security, real-time map visualization using HERE Maps API, and proximity-based alerts. It supports both sender and receiver modes for location tracking functionality.
+ProximityTracker is a simplified single-page web application built with vanilla HTML, CSS, and JavaScript that enables secure, real-time location sharing between users. The application features RSA encryption for location data security, real-time map visualization using HERE Maps API, and proximity-based alerts. It supports both sender and receiver modes for location tracking functionality.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Application structure: HTML and server.js only (no separate folders or CSS files).
 
 ## System Architecture
 
 ### Frontend Architecture
-- **Framework**: React 18 with TypeScript
-- **UI Library**: Radix UI components with shadcn/ui styling system
-- **Styling**: Tailwind CSS with custom CSS variables for theming
-- **State Management**: TanStack Query (React Query) for server state management
-- **Routing**: Wouter for lightweight client-side routing
-- **Build Tool**: Vite for fast development and optimized builds
+- **Framework**: Single HTML file with embedded JavaScript
+- **UI Library**: Tailwind CSS via CDN for styling
+- **Encryption**: JSEncrypt library via CDN for RSA encryption
+- **Maps**: HERE Maps API via CDN for map visualization
+- **State Management**: Vanilla JavaScript with global variables
+- **No Build Process**: Direct HTML file serving
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js framework
-- **Language**: TypeScript with ES modules
-- **Database**: PostgreSQL with Drizzle ORM
-- **Database Provider**: Neon Database (serverless PostgreSQL)
+- **Language**: JavaScript with ES modules
+- **Database**: In-memory storage using Maps
 - **API Pattern**: RESTful API with JSON responses
-- **Development**: Hot reload with Vite middleware integration
+- **Static Serving**: Express serves the HTML file directly
 
 ### Database Schema
 - **location_data**: Stores encrypted location information with sender ID, encrypted coordinates, public key, and timestamps
