@@ -68,8 +68,10 @@ Focus on BECKN protocol compliance and Indian logistics ecosystem.
 - **Dynamic Loading**: HERE Maps scripts are loaded dynamically in the browser
 
 ### Database Services
-- **Neon Database**: Serverless PostgreSQL hosting with connection pooling
+- **Neon Database**: Serverless PostgreSQL hosting with connection pooling (configurable)
 - **Drizzle ORM**: Type-safe database operations with PostgreSQL dialect
+- **Memory Storage**: Fallback in-memory storage for development without database setup
+- **Auto-switching**: Application automatically uses database if DATABASE_URL is provided, otherwise falls back to memory storage
 
 ### UI/UX Libraries
 - **Radix UI**: Accessible, unstyled component primitives
@@ -89,9 +91,11 @@ Focus on BECKN protocol compliance and Indian logistics ecosystem.
 - **Static Assets**: Served from Express with production optimizations
 
 ### Database Management
-- **Migrations**: Drizzle Kit push command for schema updates
+- **Migrations**: Drizzle Kit push command for schema updates (when database is available)
 - **Connection**: Neon serverless PostgreSQL with connection string configuration
 - **Fallback**: Memory storage for development without database setup
+- **Recent Update**: Added comprehensive database schema with full TrackSmart functionality
+- **Smart Storage**: Application automatically detects DATABASE_URL and switches between database and memory storage
 
 ### Environment Configuration
 - **Development**: NODE_ENV=development with tsx for TypeScript execution

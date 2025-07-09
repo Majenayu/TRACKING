@@ -1,6 +1,6 @@
-import { pgTable, text, timestamp, integer, boolean, uuid, real } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, boolean, real } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
 // Users table for authentication
