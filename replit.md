@@ -1,14 +1,13 @@
-# TrackSmart - Universal Logistics Visibility Platform
+# ProximityTracker
 
 ## Overview
 
-TrackSmart is a comprehensive logistics visibility platform that addresses the fragmented tracking challenges faced by small businesses and consumers across India. Built as an open-source, API-first solution following BECKN protocol standards, it provides unified tracking across multiple carriers and transport modes with real-time visibility, predictive delivery estimates, and seamless integration capabilities.
+ProximityTracker is a simplified single-page web application built with vanilla HTML, CSS, and JavaScript that enables secure, real-time location sharing between users. The application features RSA encryption for location data security, real-time map visualization using HERE Maps API, and proximity-based alerts. It supports both sender and receiver modes for location tracking functionality.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-Application structure: Single HTML file with embedded JavaScript, no separate CSS files or complex folder structures.
-Focus on BECKN protocol compliance and Indian logistics ecosystem.
+Application structure: HTML and server.js only (no separate folders or CSS files).
 
 ## System Architecture
 
@@ -68,10 +67,8 @@ Focus on BECKN protocol compliance and Indian logistics ecosystem.
 - **Dynamic Loading**: HERE Maps scripts are loaded dynamically in the browser
 
 ### Database Services
-- **Neon Database**: Serverless PostgreSQL hosting with connection pooling (configurable)
+- **Neon Database**: Serverless PostgreSQL hosting with connection pooling
 - **Drizzle ORM**: Type-safe database operations with PostgreSQL dialect
-- **Memory Storage**: Fallback in-memory storage for development without database setup
-- **Auto-switching**: Application automatically uses database if DATABASE_URL is provided, otherwise falls back to memory storage
 
 ### UI/UX Libraries
 - **Radix UI**: Accessible, unstyled component primitives
@@ -91,11 +88,9 @@ Focus on BECKN protocol compliance and Indian logistics ecosystem.
 - **Static Assets**: Served from Express with production optimizations
 
 ### Database Management
-- **Migrations**: Drizzle Kit push command for schema updates (when database is available)
+- **Migrations**: Drizzle Kit push command for schema updates
 - **Connection**: Neon serverless PostgreSQL with connection string configuration
 - **Fallback**: Memory storage for development without database setup
-- **Recent Update**: Added comprehensive database schema with full TrackSmart functionality
-- **Smart Storage**: Application automatically detects DATABASE_URL and switches between database and memory storage
 
 ### Environment Configuration
 - **Development**: NODE_ENV=development with tsx for TypeScript execution

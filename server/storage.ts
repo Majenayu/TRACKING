@@ -1,7 +1,7 @@
 import { users, providers, shipments, trackingEvents, integrations } from "@shared/schema";
 import type { User, InsertUser, Provider, InsertProvider, Shipment, InsertShipment, TrackingEvent, InsertTrackingEvent, Integration, InsertIntegration } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, or, like, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -191,7 +191,7 @@ export class MemStorage implements IStorage {
       isFragile: true,
     });
 
-    await this.createShipment({
+    const shipment3 = await this.createShipment({
       trackingNumber: 'TS11223344',
       providerId: 3,
       senderId: 1,
@@ -253,7 +253,6 @@ export class MemStorage implements IStorage {
     const newUser: User = {
       id: this.nextUserId++,
       ...user,
-      role: user.role || 'user',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -273,8 +272,6 @@ export class MemStorage implements IStorage {
     const newProvider: Provider = {
       id: this.nextProviderId++,
       ...provider,
-      apiEndpoint: provider.apiEndpoint || null,
-      isActive: provider.isActive !== undefined ? provider.isActive : true,
       createdAt: new Date(),
     };
     this.providers.set(newProvider.id, newProvider);
@@ -293,13 +290,6 @@ export class MemStorage implements IStorage {
     const newShipment: Shipment = {
       id: this.nextShipmentId++,
       ...shipment,
-      currentStatus: shipment.currentStatus || 'pending',
-      estimatedDelivery: shipment.estimatedDelivery || null,
-      actualDelivery: shipment.actualDelivery || null,
-      weight: shipment.weight || null,
-      dimensions: shipment.dimensions || null,
-      value: shipment.value || null,
-      isFragile: shipment.isFragile || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -330,9 +320,6 @@ export class MemStorage implements IStorage {
     const newEvent: TrackingEvent = {
       id: this.nextTrackingEventId++,
       ...event,
-      location: event.location || null,
-      latitude: event.latitude || null,
-      longitude: event.longitude || null,
       createdAt: new Date(),
     };
     this.trackingEvents.set(newEvent.id, newEvent);
@@ -349,8 +336,6 @@ export class MemStorage implements IStorage {
     const newIntegration: Integration = {
       id: this.nextIntegrationId++,
       ...integration,
-      isActive: integration.isActive !== undefined ? integration.isActive : true,
-      webhookUrl: integration.webhookUrl || null,
       createdAt: new Date(),
     };
     this.integrations.set(newIntegration.id, newIntegration);
@@ -366,4 +351,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = process.env.DATABASE_URL ? new DatabaseStorage() : new MemStorage();
+export const storage = new MemStorage();
