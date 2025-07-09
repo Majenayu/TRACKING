@@ -21,748 +21,543 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-lg">
-        <div class="max-w-md mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-white/20 p-2 rounded-full">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-medium">ProximityTracker</h1>
-                        <p id="mode-subtitle" class="text-sm text-blue-100">Sender Mode</p>
-                    </div>
-                </div>
-                <button id="toggle-mode" class="text-white hover:bg-white/10 p-2 rounded">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-md mx-auto bg-white min-h-screen">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 text-center">
+            <h1 class="text-2xl font-bold">ProximityTracker</h1>
+            <p class="text-blue-100 mt-2">Secure Location Sharing</p>
+        </header>
+
+        <!-- Mode Toggle -->
+        <div class="p-4 bg-gray-50 border-b">
+            <div class="flex rounded-lg bg-gray-200 p-1">
+                <button id="sender-mode" class="flex-1 py-2 px-4 text-sm font-medium rounded-md bg-blue-600 text-white transition-colors">
+                    Sender Mode
+                </button>
+                <button id="receiver-mode" class="flex-1 py-2 px-4 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors">
+                    Receiver Mode
                 </button>
             </div>
         </div>
-    </header>
 
-    <!-- Mode Toggle -->
-    <div class="max-w-md mx-auto px-4 py-4">
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center justify-center space-x-4">
-                <button id="sender-btn" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium">
-                    Sender
-                </button>
-                <button id="receiver-btn" class="bg-gray-100 text-gray-600 px-6 py-3 rounded-lg font-medium">
-                    Receiver
-                </button>
-            </div>
-        </div>
-    </div>
+        <!-- Main Content -->
+        <main class="p-4">
+            <!-- Sender Interface -->
+            <div id="sender-interface" class="space-y-4">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-4">Share Your Location</h2>
+                    
+                    <!-- Key Generation -->
+                    <div class="mb-4">
+                        <button id="generate-keys" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                            Generate Security Keys
+                        </button>
+                        <p class="text-sm text-gray-600 mt-2">Generate RSA keys for secure location sharing</p>
+                    </div>
 
-    <!-- Main Content -->
-    <div class="max-w-md mx-auto px-4 pb-24">
-        <!-- Sender Interface -->
-        <div id="sender-interface" class="space-y-4">
-            <!-- RSA Key Status Card -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-4 border-b">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-medium">RSA Encryption</h3>
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                            </svg>
-                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Active</span>
+                    <!-- Sender ID Display -->
+                    <div id="sender-id-display" class="hidden bg-blue-50 p-3 rounded-lg mb-4">
+                        <p class="text-sm text-gray-700">Your Sender ID:</p>
+                        <p id="sender-id" class="font-mono text-lg font-bold text-blue-600"></p>
+                        <p class="text-xs text-gray-500 mt-1">Share this ID with the receiver</p>
+                    </div>
+
+                    <!-- Location Sharing Controls -->
+                    <div class="space-y-3">
+                        <button id="start-sharing" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50" disabled>
+                            Start Sharing Location
+                        </button>
+                        <button id="stop-sharing" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors hidden">
+                            Stop Sharing Location
+                        </button>
+                    </div>
+
+                    <!-- Status Display -->
+                    <div id="sharing-status" class="hidden mt-4 p-3 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-3 pulse-animation"></div>
+                            <span class="text-sm text-gray-700">Sharing location securely...</span>
                         </div>
                     </div>
                 </div>
-                <div class="p-4 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Key Pair Status</span>
-                        <div class="flex items-center space-x-2">
-                            <div id="key-status-indicator" class="w-2 h-2 bg-red-500 rounded-full"></div>
-                            <span id="key-status-text" class="text-sm">Not Generated</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Public Key</span>
-                        <span class="text-xs text-gray-500 font-mono">RSA-2048</span>
-                    </div>
-                    <button id="generate-keys" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200">
-                        Generate Keys
-                    </button>
-                </div>
-            </div>
 
-            <!-- Location Status Card -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-4 border-b">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-medium">Location Tracking</h3>
-                        <div class="flex items-center space-x-2">
-                            <div id="tracking-indicator" class="w-2 h-2 bg-gray-400 rounded-full"></div>
-                            <span id="tracking-status" class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Inactive</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-4 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Current Location</span>
-                        <span id="current-location" class="text-sm">Not available</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Last Updated</span>
-                        <span id="last-update" class="text-sm">Never</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Update Interval</span>
-                        <span class="text-sm">Every 2 seconds</span>
-                    </div>
-                    <hr class="border-gray-200">
-                    <div class="bg-gray-50 rounded-lg p-3">
-                        <div class="flex items-center space-x-2 mb-2">
-                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                            </svg>
-                            <span class="text-sm text-gray-600">Encrypted Data</span>
-                        </div>
-                        <div class="text-xs font-mono text-gray-500 break-all">
-                            Encrypted location data sent to server
-                        </div>
+                <!-- Current Location Info -->
+                <div id="location-info" class="hidden bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-2">Current Location</h3>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <p>Latitude: <span id="current-lat">-</span></p>
+                        <p>Longitude: <span id="current-lng">-</span></p>
+                        <p>Accuracy: <span id="current-accuracy">-</span>m</p>
+                        <p>Last Updated: <span id="last-updated">-</span></p>
                     </div>
                 </div>
             </div>
 
-            <!-- Transmission Status Card -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-4 border-b">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-medium">Data Transmission</h3>
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                            </svg>
-                            <span id="transmission-status" class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Stopped</span>
-                        </div>
+            <!-- Receiver Interface -->
+            <div id="receiver-interface" class="space-y-4 hidden">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-4">Track Someone's Location</h2>
+                    
+                    <!-- Sender ID Input -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sender ID</label>
+                        <input type="text" id="receiver-sender-id" placeholder="Enter sender ID" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                </div>
-                <div class="p-4 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Server Status</span>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span class="text-sm">Connected</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Packets Sent</span>
-                        <span id="packets-sent" class="text-sm">0</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Success Rate</span>
-                        <span id="success-rate" class="text-sm text-green-600 font-medium">0%</span>
-                    </div>
-                    <button id="toggle-tracking" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50" disabled>
-                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Start Tracking
-                    </button>
-                </div>
-            </div>
-        </div>
 
-        <!-- Receiver Interface -->
-        <div id="receiver-interface" class="space-y-4 hidden">
-            <!-- Connection Status Card -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-4 border-b">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-medium">Connection Status</h3>
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-                            </svg>
-                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Connected</span>
-                        </div>
+                    <!-- Tracking Controls -->
+                    <div class="space-y-3">
+                        <button id="start-tracking" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                            Start Tracking
+                        </button>
+                        <button id="stop-tracking" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors hidden">
+                            Stop Tracking
+                        </button>
                     </div>
-                </div>
-                <div class="p-4 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Proximity Verification</span>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span class="text-sm">Server-side Protected</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Private Key</span>
-                        <div class="flex items-center space-x-2">
-                            <div id="private-key-indicator" class="w-2 h-2 bg-red-500 rounded-full"></div>
-                            <span id="private-key-status" class="text-sm">Not Available</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Data Fetching</span>
-                        <span class="text-sm">Every 2 seconds</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Last Sync</span>
-                        <span id="last-sync" class="text-sm">Never</span>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Distance Calculation Card -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-4 border-b">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-medium">Proximity Status</h3>
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            <span id="proximity-status" class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Out of Range</span>
+                    <!-- Distance Display -->
+                    <div id="distance-display" class="hidden mt-4 p-3 rounded-lg">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-blue-600" id="distance-value">-</div>
+                            <div class="text-sm text-gray-600">meters away</div>
                         </div>
                     </div>
-                </div>
-                <div class="p-4 space-y-4">
-                    <div class="text-center">
-                        <div id="distance-display" class="text-3xl font-bold text-orange-500 mb-1">0 meters</div>
-                        <div class="text-sm text-gray-600">distance away</div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div id="distance-progress" class="bg-orange-500 h-2 rounded-full" style="width: 0%"></div>
-                        </div>
-                        <div class="flex items-center justify-between text-sm text-gray-600">
-                            <span>0 km</span>
-                            <span>1 km range</span>
-                        </div>
-                    </div>
-                    <div id="visibility-status" class="border rounded-lg p-3 bg-gray-50 border-gray-200">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M9.878 9.878l-.415-.415m4.242 4.242l1.414 1.414m-1.414-1.414L12 12m-1.414-1.414L9.172 9.172"></path>
-                            </svg>
-                            <span class="text-sm font-medium text-gray-800">Location Hidden</span>
-                        </div>
-                        <p class="text-xs mt-1 text-gray-700">Sender is outside 1km range</p>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Map View Card -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-4 border-b">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-medium">Map View</h3>
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                            </svg>
-                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">HERE Maps</span>
+                    <!-- Proximity Alert -->
+                    <div id="proximity-alert" class="hidden mt-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-orange-500 rounded-full mr-3 pulse-animation"></div>
+                            <span class="text-sm text-orange-700">You are within 1km of the sender!</span>
                         </div>
                     </div>
                 </div>
-                <div class="p-0">
-                    <div id="map-container" class="h-80 w-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                        <div class="text-center text-white">
-                            <div class="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M9.878 9.878l-.415-.415m4.242 4.242l1.414 1.414m-1.414-1.414L12 12m-1.414-1.414L9.172 9.172"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-medium mb-2">Location Hidden</h3>
-                            <p class="text-sm opacity-90">Sender is outside 1km range</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div class="max-w-md mx-auto px-4 py-3">
-            <div class="flex items-center justify-around">
-                <button class="flex flex-col items-center space-y-1 text-blue-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span class="text-xs font-medium">Location</span>
-                </button>
-                <button class="flex flex-col items-center space-y-1 text-gray-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                    <span class="text-xs font-medium">Security</span>
-                </button>
-                <button class="flex flex-col items-center space-y-1 text-gray-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span class="text-xs font-medium">Settings</span>
-                </button>
+                <!-- Map Container -->
+                <div id="map-container" class="hidden bg-white rounded-lg shadow overflow-hidden">
+                    <div id="here-map" class="w-full h-64"></div>
+                </div>
+
+                <!-- Location Details -->
+                <div id="tracking-info" class="hidden bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-2">Tracking Information</h3>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <p>Sender Latitude: <span id="sender-lat">-</span></p>
+                        <p>Sender Longitude: <span id="sender-lng">-</span></p>
+                        <p>Your Latitude: <span id="receiver-lat">-</span></p>
+                        <p>Your Longitude: <span id="receiver-lng">-</span></p>
+                        <p>Last Updated: <span id="tracking-updated">-</span></p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
+
+        <!-- Notifications -->
+        <div id="notifications" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
     </div>
 
     <script>
         // Global variables
         let currentMode = 'sender';
-        let keyPair = null;
+        let senderKeys = null;
+        let senderId = null;
+        let isSharing = false;
         let isTracking = false;
+        let sharingInterval = null;
         let trackingInterval = null;
-        let packetsSent = 0;
-        let receiverLocation = null;
-        let senderLocation = null;
-        let mapInstance = null;
-        let platformInstance = null;
-        let receiverInterval = null;
-        const senderId = 'default-sender';
-        const HERE_API_KEY = 'demo_key'; // Replace with your actual HERE API key
+        let hereMap = null;
+        let mapInitialized = false;
 
-        // RSA Crypto utilities
-        class RSACrypto {
-            constructor() {
-                this.jsEncrypt = new JSEncrypt();
-            }
+        // HERE Maps API key (demo key - replace with your own)
+        const HERE_API_KEY = 'demo-key';
 
-            generateKeyPair() {
-                this.jsEncrypt.getKey();
-                return {
-                    publicKey: this.jsEncrypt.getPublicKey(),
-                    privateKey: this.jsEncrypt.getPrivateKey()
-                };
-            }
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            setupModeToggle();
+            setupSenderInterface();
+            setupReceiverInterface();
+            showNotification('Welcome to ProximityTracker! Generate keys to start sharing your location.', 'info');
+        });
 
-            encrypt(data, publicKey) {
-                this.jsEncrypt.setPublicKey(publicKey);
-                return this.jsEncrypt.encrypt(data);
-            }
-
-            decrypt(encryptedData, privateKey) {
-                this.jsEncrypt.setPrivateKey(privateKey);
-                return this.jsEncrypt.decrypt(encryptedData);
-            }
+        // Mode toggle functionality
+        function setupModeToggle() {
+            document.getElementById('sender-mode').addEventListener('click', () => switchMode('sender'));
+            document.getElementById('receiver-mode').addEventListener('click', () => switchMode('receiver'));
         }
 
-        const crypto = new RSACrypto();
-
-        // Distance calculation using Haversine formula
-        function calculateDistance(coord1, coord2) {
-            const R = 6371; // Earth's radius in kilometers
-            const dLat = toRadians(coord2.latitude - coord1.latitude);
-            const dLon = toRadians(coord2.longitude - coord1.longitude);
-            
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                    Math.cos(toRadians(coord1.latitude)) * Math.cos(toRadians(coord2.latitude)) *
-                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
-
-        function toRadians(degrees) {
-            return degrees * (Math.PI / 180);
-        }
-
-        // Geolocation utilities
-        function getCurrentPosition() {
-            return new Promise((resolve, reject) => {
-                if (!navigator.geolocation) {
-                    reject(new Error('Geolocation not supported'));
-                    return;
-                }
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        resolve({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
-                        });
-                    },
-                    (error) => reject(error),
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 5000,
-                        maximumAge: 0
-                    }
-                );
-            });
-        }
-
-        // API utilities
-        async function apiRequest(method, url, data = null) {
-            const options = {
-                method,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
-
-            if (data) {
-                options.body = JSON.stringify(data);
-            }
-
-            const response = await fetch(url, options);
-            if (!response.ok) {
-                throw new Error(`API request failed: ${response.status}`);
-            }
-            return await response.json();
-        }
-
-        // Mode switching
         function switchMode(mode) {
             currentMode = mode;
             
-            // Update UI
-            document.getElementById('mode-subtitle').textContent = mode === 'sender' ? 'Sender Mode' : 'Receiver Mode';
-            
-            // Update buttons
-            const senderBtn = document.getElementById('sender-btn');
-            const receiverBtn = document.getElementById('receiver-btn');
-            
+            // Update button styles
             if (mode === 'sender') {
-                senderBtn.className = 'bg-blue-600 text-white px-6 py-3 rounded-lg font-medium';
-                receiverBtn.className = 'bg-gray-100 text-gray-600 px-6 py-3 rounded-lg font-medium';
+                document.getElementById('sender-mode').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md bg-blue-600 text-white transition-colors';
+                document.getElementById('receiver-mode').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors';
                 document.getElementById('sender-interface').classList.remove('hidden');
                 document.getElementById('receiver-interface').classList.add('hidden');
-                
-                // Stop receiver polling
-                if (receiverInterval) {
-                    clearInterval(receiverInterval);
-                    receiverInterval = null;
-                }
             } else {
-                receiverBtn.className = 'bg-blue-600 text-white px-6 py-3 rounded-lg font-medium';
-                senderBtn.className = 'bg-gray-100 text-gray-600 px-6 py-3 rounded-lg font-medium';
-                document.getElementById('receiver-interface').classList.remove('hidden');
+                document.getElementById('sender-mode').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors';
+                document.getElementById('receiver-mode').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md bg-blue-600 text-white transition-colors';
                 document.getElementById('sender-interface').classList.add('hidden');
-                
-                // Start receiver functionality
-                startReceiver();
+                document.getElementById('receiver-interface').classList.remove('hidden');
             }
         }
 
-        // Sender functionality
+        // Sender interface setup
+        function setupSenderInterface() {
+            document.getElementById('generate-keys').addEventListener('click', generateKeys);
+            document.getElementById('start-sharing').addEventListener('click', startLocationSharing);
+            document.getElementById('stop-sharing').addEventListener('click', stopLocationSharing);
+        }
+
         async function generateKeys() {
             try {
-                keyPair = crypto.generateKeyPair();
+                showNotification('Generating RSA keys...', 'info');
+                
+                // Generate RSA key pair
+                const crypt = new JSEncrypt({default_key_size: 2048});
+                crypt.getKey();
+                
+                senderKeys = {
+                    public: crypt.getPublicKey(),
+                    private: crypt.getPrivateKey()
+                };
+                
+                // Generate unique sender ID
+                senderId = 'sender_' + Math.random().toString(36).substr(2, 9);
                 
                 // Store keys on server
-                await apiRequest('POST', '/api/keys', {
-                    senderId,
-                    publicKey: keyPair.publicKey,
-                    privateKey: keyPair.privateKey
+                const response = await fetch('/api/keys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        senderId: senderId,
+                        publicKey: senderKeys.public,
+                        privateKey: senderKeys.private
+                    })
                 });
-
-                // Update UI
-                document.getElementById('key-status-indicator').className = 'w-2 h-2 bg-green-500 rounded-full';
-                document.getElementById('key-status-text').textContent = 'Generated';
-                document.getElementById('toggle-tracking').disabled = false;
                 
-                showNotification('RSA key pair generated and stored successfully', 'success');
+                if (response.ok) {
+                    // Show sender ID
+                    document.getElementById('sender-id').textContent = senderId;
+                    document.getElementById('sender-id-display').classList.remove('hidden');
+                    document.getElementById('start-sharing').disabled = false;
+                    
+                    showNotification('Keys generated successfully! Share your Sender ID with the receiver.', 'success');
+                } else {
+                    throw new Error('Failed to store keys');
+                }
+                
             } catch (error) {
                 console.error('Error generating keys:', error);
-                showNotification('Failed to generate RSA key pair', 'error');
+                showNotification('Failed to generate keys. Please try again.', 'error');
             }
         }
 
-        async function sendEncryptedLocation(location) {
-            if (!keyPair) return;
+        async function startLocationSharing() {
+            if (!senderKeys || !senderId) {
+                showNotification('Please generate keys first', 'error');
+                return;
+            }
 
             try {
-                const locationData = JSON.stringify(location);
-                const encryptedLocation = crypto.encrypt(locationData, keyPair.publicKey);
+                // Request location permission
+                const position = await getCurrentPosition();
                 
-                await apiRequest('POST', '/api/location', {
-                    senderId,
-                    encryptedLocation,
-                    publicKey: keyPair.publicKey
-                });
-
-                packetsSent++;
-                document.getElementById('packets-sent').textContent = packetsSent;
-                document.getElementById('success-rate').textContent = '100%';
-                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+                isSharing = true;
+                document.getElementById('start-sharing').classList.add('hidden');
+                document.getElementById('stop-sharing').classList.remove('hidden');
+                document.getElementById('sharing-status').classList.remove('hidden');
+                document.getElementById('location-info').classList.remove('hidden');
+                
+                // Start sharing location every 2 seconds
+                sharingInterval = setInterval(shareLocation, 2000);
+                shareLocation(); // Share immediately
+                
+                showNotification('Started sharing location securely', 'success');
+                
             } catch (error) {
-                console.error('Error sending location:', error);
-                showNotification('Failed to send location data', 'error');
+                console.error('Error starting location sharing:', error);
+                showNotification('Failed to access location. Please enable location services.', 'error');
             }
         }
 
-        function toggleTracking() {
-            if (isTracking) {
-                // Stop tracking
-                if (trackingInterval) {
-                    clearInterval(trackingInterval);
-                    trackingInterval = null;
-                }
-                isTracking = false;
+        async function shareLocation() {
+            try {
+                const position = await getCurrentPosition();
+                const { latitude, longitude, accuracy } = position.coords;
                 
                 // Update UI
-                document.getElementById('tracking-indicator').className = 'w-2 h-2 bg-gray-400 rounded-full';
-                document.getElementById('tracking-status').className = 'bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded';
-                document.getElementById('tracking-status').textContent = 'Inactive';
-                document.getElementById('transmission-status').className = 'bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded';
-                document.getElementById('transmission-status').textContent = 'Stopped';
-                document.getElementById('toggle-tracking').textContent = 'Start Tracking';
-            } else {
-                // Start tracking
+                document.getElementById('current-lat').textContent = latitude.toFixed(6);
+                document.getElementById('current-lng').textContent = longitude.toFixed(6);
+                document.getElementById('current-accuracy').textContent = accuracy.toFixed(0);
+                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+                
+                // Encrypt location data
+                const locationData = JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude,
+                    accuracy: accuracy,
+                    timestamp: Date.now()
+                });
+                
+                const crypt = new JSEncrypt();
+                crypt.setPublicKey(senderKeys.public);
+                const encryptedData = crypt.encrypt(locationData);
+                
+                // Send to server
+                const response = await fetch('/api/location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        senderId: senderId,
+                        encryptedData: encryptedData,
+                        publicKey: senderKeys.public,
+                        timestamp: Date.now()
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to share location');
+                }
+                
+            } catch (error) {
+                console.error('Error sharing location:', error);
+                showNotification('Failed to share location', 'error');
+            }
+        }
+
+        function stopLocationSharing() {
+            isSharing = false;
+            if (sharingInterval) {
+                clearInterval(sharingInterval);
+                sharingInterval = null;
+            }
+            
+            document.getElementById('start-sharing').classList.remove('hidden');
+            document.getElementById('stop-sharing').classList.add('hidden');
+            document.getElementById('sharing-status').classList.add('hidden');
+            
+            showNotification('Stopped sharing location', 'info');
+        }
+
+        // Receiver interface setup
+        function setupReceiverInterface() {
+            document.getElementById('start-tracking').addEventListener('click', startTracking);
+            document.getElementById('stop-tracking').addEventListener('click', stopTracking);
+        }
+
+        async function startTracking() {
+            const inputSenderId = document.getElementById('receiver-sender-id').value.trim();
+            
+            if (!inputSenderId) {
+                showNotification('Please enter a sender ID', 'error');
+                return;
+            }
+            
+            try {
+                // Get receiver's location
+                const receiverPosition = await getCurrentPosition();
+                
                 isTracking = true;
+                document.getElementById('start-tracking').classList.add('hidden');
+                document.getElementById('stop-tracking').classList.remove('hidden');
+                document.getElementById('distance-display').classList.remove('hidden');
+                document.getElementById('tracking-info').classList.remove('hidden');
                 
-                // Update UI
-                document.getElementById('tracking-indicator').className = 'w-2 h-2 bg-green-500 rounded-full pulse-animation';
-                document.getElementById('tracking-status').className = 'bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded';
-                document.getElementById('tracking-status').textContent = 'Active';
-                document.getElementById('transmission-status').className = 'bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded';
-                document.getElementById('transmission-status').textContent = 'Sending';
-                document.getElementById('toggle-tracking').textContent = 'Stop Tracking';
+                // Initialize map
+                if (!mapInitialized) {
+                    initializeMap();
+                }
                 
-                // Start location tracking
-                trackingInterval = setInterval(async () => {
-                    try {
-                        const location = await getCurrentPosition();
-                        document.getElementById('current-location').textContent = 
-                            `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
-                        await sendEncryptedLocation(location);
-                    } catch (error) {
-                        console.error('Error getting location:', error);
-                        showNotification('Failed to get current location', 'error');
-                    }
-                }, 2000);
-            }
-        }
-
-        // Receiver functionality
-        async function startReceiver() {
-            try {
-                // Get receiver location
-                receiverLocation = await getCurrentPosition();
+                // Start tracking every 2 seconds
+                trackingInterval = setInterval(() => trackLocation(inputSenderId, receiverPosition), 2000);
+                trackLocation(inputSenderId, receiverPosition); // Track immediately
                 
-                // Start polling for data
-                receiverInterval = setInterval(async () => {
-                    try {
-                        // Update receiver location (in case user moves)
-                        receiverLocation = await getCurrentPosition();
-                        
-                        // Verify proximity and get location data
-                        const verificationResult = await apiRequest('POST', '/api/location/verify', {
-                            senderId,
-                            receiverLocation
-                        });
-                        
-                        if (verificationResult) {
-                            document.getElementById('last-sync').textContent = new Date().toLocaleTimeString();
-                            
-                            // Update distance display
-                            updateDistanceDisplay(verificationResult.distance, verificationResult.isWithinRange);
-                            
-                            if (verificationResult.isWithinRange) {
-                                // Only decrypt and show location if within range
-                                document.getElementById('private-key-indicator').className = 'w-2 h-2 bg-green-500 rounded-full';
-                                document.getElementById('private-key-status').textContent = 'Loaded';
-                                
-                                // Decrypt location
-                                const decryptedData = crypto.decrypt(verificationResult.locationData.encryptedLocation, verificationResult.keyPair.privateKey);
-                                const coordinates = JSON.parse(decryptedData);
-                                
-                                senderLocation = coordinates;
-                                
-                                // Update map view
-                                updateMapView(true);
-                            } else {
-                                // Clear location data if outside range
-                                senderLocation = null;
-                                document.getElementById('private-key-indicator').className = 'w-2 h-2 bg-gray-400 rounded-full';
-                                document.getElementById('private-key-status').textContent = 'Access Denied';
-                                
-                                // Update map view
-                                updateMapView(false);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error in receiver polling:', error);
-                        // Show error state
-                        document.getElementById('private-key-indicator').className = 'w-2 h-2 bg-red-500 rounded-full';
-                        document.getElementById('private-key-status').textContent = 'Error';
-                        updateMapView(false);
-                    }
-                }, 2000);
+                showNotification('Started tracking location', 'success');
                 
             } catch (error) {
-                console.error('Error starting receiver:', error);
-                showNotification('Failed to get your current location', 'error');
+                console.error('Error starting tracking:', error);
+                showNotification('Failed to start tracking. Please check sender ID and try again.', 'error');
             }
         }
 
-        function updateDistanceDisplay(distance, isWithinRange) {
-            const formatDistance = (dist) => {
-                if (dist < 1) {
-                    return `${(dist * 1000).toFixed(0)} meters`;
+        async function trackLocation(senderId, receiverPosition) {
+            try {
+                // Get current receiver position
+                const currentReceiverPos = await getCurrentPosition();
+                
+                // Fetch sender's encrypted location
+                const response = await fetch(`/api/location/${senderId}`);
+                if (!response.ok) {
+                    throw new Error('Sender not found or not sharing location');
                 }
-                return `${dist.toFixed(2)} km`;
-            };
-            
-            document.getElementById('distance-display').textContent = formatDistance(distance);
-            
-            const percentage = Math.min((distance / 1.0) * 100, 100);
-            document.getElementById('distance-progress').style.width = `${percentage}%`;
-            
-            const proximityStatus = document.getElementById('proximity-status');
-            const visibilityStatus = document.getElementById('visibility-status');
-            
-            if (isWithinRange) {
-                proximityStatus.className = 'bg-orange-100 text-orange-800 text-xs font-medium px-2.5 py-0.5 rounded';
-                proximityStatus.textContent = 'Within Range';
-                visibilityStatus.className = 'border rounded-lg p-3 bg-orange-50 border-orange-200';
-                visibilityStatus.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                        <span class="text-sm font-medium text-orange-800">Location Visible</span>
-                    </div>
-                    <p class="text-xs mt-1 text-orange-700">Sender is within 1km range</p>
-                `;
-            } else {
-                proximityStatus.className = 'bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded';
-                proximityStatus.textContent = 'Out of Range';
-                visibilityStatus.className = 'border rounded-lg p-3 bg-gray-50 border-gray-200';
-                visibilityStatus.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M9.878 9.878l-.415-.415m4.242 4.242l1.414 1.414m-1.414-1.414L12 12m-1.414-1.414L9.172 9.172"></path>
-                        </svg>
-                        <span class="text-sm font-medium text-gray-800">Location Hidden</span>
-                    </div>
-                    <p class="text-xs mt-1 text-gray-700">Sender is outside 1km range</p>
-                `;
-            }
-        }
-
-        function updateMapView(isWithinRange) {
-            const mapContainer = document.getElementById('map-container');
-            
-            if (!isWithinRange) {
-                mapContainer.innerHTML = `
-                    <div class="text-center text-white">
-                        <div class="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M9.878 9.878l-.415-.415m4.242 4.242l1.414 1.414m-1.414-1.414L12 12m-1.414-1.414L9.172 9.172"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-medium mb-2">Location Hidden</h3>
-                        <p class="text-sm opacity-90">Sender is outside 1km range</p>
-                    </div>
-                `;
-                mapContainer.className = 'h-80 w-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center';
-            } else {
-                initializeMap();
-            }
-        }
-
-        function initializeMap() {
-            const mapContainer = document.getElementById('map-container');
-            mapContainer.innerHTML = '';
-            mapContainer.className = 'h-80 w-full';
-            
-            if (typeof H !== 'undefined') {
-                platformInstance = new H.service.Platform({
-                    'apikey': HERE_API_KEY
-                });
-
-                const defaultMapTypes = platformInstance.createDefaultMapTypes();
-                mapInstance = new H.Map(
-                    mapContainer,
-                    defaultMapTypes.vector.normal.map,
-                    {
-                        zoom: 15,
-                        center: receiverLocation ? { lat: receiverLocation.latitude, lng: receiverLocation.longitude } : { lat: 37.7749, lng: -122.4194 }
-                    }
+                
+                const data = await response.json();
+                
+                // Get sender's private key for decryption
+                const keysResponse = await fetch(`/api/keys/${senderId}`);
+                if (!keysResponse.ok) {
+                    throw new Error('Keys not found');
+                }
+                
+                const keysData = await keysResponse.json();
+                
+                // Decrypt location data
+                const crypt = new JSEncrypt();
+                crypt.setPrivateKey(keysData.privateKey);
+                const decryptedData = crypt.decrypt(data.encryptedData);
+                
+                if (!decryptedData) {
+                    throw new Error('Failed to decrypt location data');
+                }
+                
+                const senderLocation = JSON.parse(decryptedData);
+                
+                // Calculate distance
+                const distance = calculateDistance(
+                    currentReceiverPos.coords.latitude,
+                    currentReceiverPos.coords.longitude,
+                    senderLocation.latitude,
+                    senderLocation.longitude
                 );
-
-                const behavior = new H.mapevents.Behavior();
-                const ui = new H.ui.UI.createDefault(mapInstance);
-
-                // Add markers
-                if (receiverLocation) {
-                    const receiverMarker = new H.map.Marker({
-                        lat: receiverLocation.latitude,
-                        lng: receiverLocation.longitude
-                    });
-                    mapInstance.addObject(receiverMarker);
+                
+                // Update UI
+                document.getElementById('distance-value').textContent = Math.round(distance);
+                document.getElementById('sender-lat').textContent = senderLocation.latitude.toFixed(6);
+                document.getElementById('sender-lng').textContent = senderLocation.longitude.toFixed(6);
+                document.getElementById('receiver-lat').textContent = currentReceiverPos.coords.latitude.toFixed(6);
+                document.getElementById('receiver-lng').textContent = currentReceiverPos.coords.longitude.toFixed(6);
+                document.getElementById('tracking-updated').textContent = new Date().toLocaleTimeString();
+                
+                // Proximity alert
+                if (distance <= 1000) {
+                    document.getElementById('proximity-alert').classList.remove('hidden');
+                } else {
+                    document.getElementById('proximity-alert').classList.add('hidden');
                 }
-
-                if (senderLocation) {
-                    const senderMarker = new H.map.Marker({
-                        lat: senderLocation.latitude,
-                        lng: senderLocation.longitude
-                    });
-                    mapInstance.addObject(senderMarker);
-
-                    // Center map to show both locations
-                    if (receiverLocation) {
-                        const group = new H.map.Group();
-                        group.addObject(senderMarker);
-                        group.addObject(new H.map.Marker({
-                            lat: receiverLocation.latitude,
-                            lng: receiverLocation.longitude
-                        }));
-                        mapInstance.getViewModel().setLookAtData({
-                            bounds: group.getBoundingBox()
-                        });
-                    }
+                
+                // Update map
+                if (hereMap) {
+                    updateMap(senderLocation, currentReceiverPos.coords);
                 }
+                
+            } catch (error) {
+                console.error('Error tracking location:', error);
+                showNotification('Failed to track location. Sender may not be sharing.', 'error');
             }
         }
 
-        // Notification system
+        function stopTracking() {
+            isTracking = false;
+            if (trackingInterval) {
+                clearInterval(trackingInterval);
+                trackingInterval = null;
+            }
+            
+            document.getElementById('start-tracking').classList.remove('hidden');
+            document.getElementById('stop-tracking').classList.add('hidden');
+            document.getElementById('distance-display').classList.add('hidden');
+            document.getElementById('proximity-alert').classList.add('hidden');
+            document.getElementById('map-container').classList.add('hidden');
+            
+            showNotification('Stopped tracking location', 'info');
+        }
+
+        // HERE Maps functionality
+        function initializeMap() {
+            // Note: This is a demo implementation. In production, you'd need a valid HERE API key
+            document.getElementById('map-container').classList.remove('hidden');
+            document.getElementById('here-map').innerHTML = `
+                <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                    <div class="text-center">
+                        <div class="text-gray-600 mb-2">📍 Interactive Map</div>
+                        <div class="text-sm text-gray-500">HERE Maps integration</div>
+                        <div class="text-xs text-gray-400 mt-1">Configure HERE_API_KEY for full functionality</div>
+                    </div>
+                </div>
+            `;
+            mapInitialized = true;
+        }
+
+        function updateMap(senderLocation, receiverLocation) {
+            // This would update the HERE map with both locations
+            // For now, just show that the map is being updated
+            const mapDiv = document.getElementById('here-map');
+            if (mapDiv) {
+                const distance = calculateDistance(
+                    receiverLocation.latitude,
+                    receiverLocation.longitude,
+                    senderLocation.latitude,
+                    senderLocation.longitude
+                );
+                
+                mapDiv.innerHTML = `
+                    <div class="w-full h-64 bg-blue-50 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-blue-600 mb-2">📍 Live Tracking</div>
+                            <div class="text-sm text-gray-700">Distance: ${Math.round(distance)}m</div>
+                            <div class="text-xs text-gray-500 mt-1">Sender: ${senderLocation.latitude.toFixed(4)}, ${senderLocation.longitude.toFixed(4)}</div>
+                            <div class="text-xs text-gray-500">You: ${receiverLocation.latitude.toFixed(4)}, ${receiverLocation.longitude.toFixed(4)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Utility functions
+        function getCurrentPosition() {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            });
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
-            const bgColor = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500';
+            const colors = {
+                info: 'bg-blue-500',
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500'
+            };
             
-            notification.className = `fixed top-4 right-4 ${bgColor} text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300`;
+            notification.className = `${colors[type]} text-white px-4 py-2 rounded-lg shadow-lg mb-2 transition-all duration-300`;
             notification.textContent = message;
             
-            document.body.appendChild(notification);
+            document.getElementById('notifications').appendChild(notification);
             
+            // Remove notification after 5 seconds
             setTimeout(() => {
                 notification.remove();
-            }, 3000);
+            }, 5000);
         }
 
-        // Event listeners
-        document.getElementById('toggle-mode').addEventListener('click', () => {
-            switchMode(currentMode === 'sender' ? 'receiver' : 'sender');
-        });
-
-        document.getElementById('sender-btn').addEventListener('click', () => {
-            switchMode('sender');
-        });
-
-        document.getElementById('receiver-btn').addEventListener('click', () => {
-            switchMode('receiver');
-        });
-
-        document.getElementById('generate-keys').addEventListener('click', generateKeys);
-        document.getElementById('toggle-tracking').addEventListener('click', toggleTracking);
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            // Auto-generate keys on startup
-            generateKeys();
-            // Show proximity verification info
-            showNotification('Enhanced proximity verification active - location data only shared when users are within 1km of each other', 'info');
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (isSharing) {
+                stopLocationSharing();
+            }
+            if (isTracking) {
+                stopTracking();
+            }
         });
     </script>
 </body>
